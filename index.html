@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Secret of Fire Island</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="game-stage">
+    <main id="game-window" class="game-window" aria-label="The Secret of Fire Island game window">
+      <section id="scene" class="scene" aria-label="Street scene">
+        <img class="scene-background" src="images/DomusBothnica_pixelated.png" alt="" aria-hidden="true">
+
+        <button class="hotspot hotspot-mentor" type="button" data-target="mentor" aria-label="Tewo the Mentor">
+          <span class="sprite sprite-mentor" aria-hidden="true"></span>
+          <span class="sr-only">Tewo the Mentor</span>
+        </button>
+
+        <button class="hotspot hotspot-kiosk" type="button" data-target="kiosk" aria-label="Campus kiosk terminal">
+          <span class="sprite sprite-kiosk" aria-hidden="true"></span>
+          <span class="sr-only">Campus kiosk terminal</span>
+        </button>
+
+        <button class="hotspot hotspot-duck" type="button" data-target="duck" aria-label="Rubber duck">
+          <span class="sprite sprite-duck" aria-hidden="true"></span>
+          <span class="sr-only">Rubber duck</span>
+        </button>
+
+        <div id="player" class="player" aria-hidden="true">
+          <span class="player-head"></span>
+          <span class="player-body"></span>
+        </div>
+      </section>
+
+      <section class="command-panel" aria-label="Adventure commands and inventory">
+        <p id="action-line" class="action-line" aria-live="polite">Walk to</p>
+
+        <div class="panel-grid">
+          <div class="verbs-panel" aria-label="Available actions">
+            <button class="verb is-selected" type="button" data-verb="walk">Walk to</button>
+            <button class="verb" type="button" data-verb="look">Look at</button>
+            <button class="verb" type="button" data-verb="talk">Talk to</button>
+            <button class="verb" type="button" data-verb="pickup">Pick up</button>
+            <button class="verb" type="button" data-verb="use">Use</button>
+            <button class="verb" type="button" data-verb="debug">Debug</button>
+          </div>
+
+          <section class="inventory-panel" aria-label="Inventory items">
+            <ul id="inventory-list" class="inventory-list">
+              <li class="inventory-empty">Empty</li>
+            </ul>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
