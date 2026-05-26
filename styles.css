@@ -1,0 +1,364 @@
+@font-face {
+  font-family: "Tiny5";
+  src: url("fonts/Tiny5-latin.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Silkscreen";
+  src: url("fonts/Silkscreen-latin.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+}
+
+:root {
+  color-scheme: dark;
+  --game-scale: 3;
+  --native-width: 320;
+  --native-height: 240;
+  --page-black: #000000;
+  --panel-dark: #150015;
+  --panel-mid: #220022;
+  --panel-line: #480048;
+  --verb-text: #b65cff;
+  --verb-active: #ffd04e;
+  --inventory-text: #c48cff;
+  --action-text: #ff7bff;
+  --window-border: #2d2d2d;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  display: grid;
+  place-items: center;
+  background: var(--page-black);
+  font-family: Arial, Helvetica, sans-serif;
+  color: #ffffff;
+  overflow: hidden;
+}
+
+button {
+  font: inherit;
+}
+
+.game-stage {
+  width: calc(320px * var(--game-scale));
+  height: calc(240px * var(--game-scale));
+}
+
+.game-window {
+  width: 320px;
+  height: 240px;
+  display: grid;
+  grid-template-rows: 144px 96px;
+  border: 1px solid var(--window-border);
+  background: #000000;
+  overflow: hidden;
+  image-rendering: pixelated;
+  transform-origin: top left;
+  transform: scale(var(--game-scale));
+}
+
+.scene {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid #000000;
+  background: #080810;
+}
+
+.scene::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 32px;
+  background: linear-gradient(180deg, rgba(8, 4, 20, 0) 0%, rgba(8, 4, 20, 0.75) 100%);
+  pointer-events: none;
+}
+
+.scene-background {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.hotspot,
+.player {
+  position: absolute;
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.hotspot {
+  cursor: pointer;
+}
+
+.hotspot:focus-visible {
+  outline: 1px solid var(--verb-active);
+  outline-offset: 0;
+}
+
+.sprite {
+  display: block;
+  position: relative;
+}
+
+.hotspot-mentor {
+  left: 12px;
+  bottom: 12px;
+  width: 42px;
+  height: 54px;
+}
+
+.sprite-mentor {
+  position: absolute;
+  left: 8px;
+  bottom: 0;
+  width: 10px;
+  height: 28px;
+  background: #2b4db0;
+  box-shadow:
+    0 -8px 0 0 #f0be8f,
+    0 6px 0 0 #d05b7a,
+    0 14px 0 0 #25409b,
+    14px 0 0 0 #f0be8f,
+    14px 8px 0 0 #d05b7a,
+    14px 16px 0 0 #25409b;
+}
+
+.hotspot-kiosk {
+  left: 248px;
+  bottom: 14px;
+  width: 38px;
+  height: 60px;
+}
+
+.sprite-kiosk {
+  position: absolute;
+  left: 8px;
+  bottom: 0;
+  width: 22px;
+  height: 38px;
+  background: #2830a0;
+  box-shadow:
+    inset 0 0 0 1px #0b0f47,
+    inset 3px 3px 0 0 #ffe070,
+    inset 12px 3px 0 0 #ffe070,
+    inset 3px 12px 0 0 #141756,
+    inset 12px 12px 0 0 #141756,
+    inset 0 -5px 0 0 #111343;
+}
+
+.sprite-kiosk::before {
+  content: "";
+  position: absolute;
+  left: -2px;
+  top: -5px;
+  width: 26px;
+  height: 5px;
+  background: #4255d6;
+}
+
+.hotspot-duck {
+  left: 188px;
+  bottom: 15px;
+  width: 16px;
+  height: 12px;
+}
+
+.sprite-duck {
+  position: absolute;
+  left: 2px;
+  bottom: 0;
+  width: 8px;
+  height: 6px;
+  background: #ffcf4f;
+  box-shadow:
+    4px 0 0 0 #ffcf4f,
+    2px -2px 0 0 #ffcf4f,
+    8px 2px 0 0 #f28b29;
+}
+
+.player {
+  left: 152px;
+  bottom: 15px;
+  width: 12px;
+  height: 34px;
+  transition: left 240ms steps(4), bottom 240ms steps(4);
+  pointer-events: none;
+}
+
+.player-head,
+.player-body {
+  position: absolute;
+  display: block;
+}
+
+.player-head {
+  top: 0;
+  left: 2px;
+  width: 8px;
+  height: 8px;
+  background: #f0c191;
+}
+
+.player-body {
+  top: 8px;
+  left: 1px;
+  width: 10px;
+  height: 20px;
+  background: linear-gradient(180deg, #f1efe8 0 4px, #6f3039 4px 10px, #2538a4 10px 100%);
+}
+
+.player-body::before,
+.player-body::after {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  width: 3px;
+  height: 6px;
+  background: #1a1d4a;
+}
+
+.player-body::before {
+  left: 1px;
+}
+
+.player-body::after {
+  right: 1px;
+}
+
+.command-panel {
+  display: grid;
+  grid-template-rows: 18px 78px;
+  background: var(--panel-dark);
+  border-top: 1px solid var(--panel-line);
+}
+
+.action-line {
+  font-family: "Silkscreen", "Tiny5", "Courier New", Courier, monospace;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  color: var(--action-text);
+  font-size: 7px;
+  line-height: 1;
+  border-bottom: 1px solid var(--panel-line);
+  white-space: nowrap;
+  overflow: hidden;
+  padding: 0 4px;
+}
+
+.panel-grid {
+  display: grid;
+  grid-template-columns: 126px 194px;
+  min-height: 0;
+}
+
+.verbs-panel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px 8px;
+  padding: 8px 8px 8px 8px;
+  align-content: start;
+  border-right: 1px solid var(--panel-line);
+}
+
+.verb {
+  font-family: "Silkscreen", "Tiny5", "Courier New", Courier, monospace;
+  border: 0;
+  padding: 0;
+  color: var(--verb-text);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font-size: 7px;
+  line-height: 1.05;
+}
+
+.verb:hover,
+.verb:focus-visible,
+.verb.is-selected {
+  color: var(--verb-active);
+  outline: none;
+}
+
+.inventory-panel {
+  padding: 8px 8px 8px 10px;
+}
+
+.inventory-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px 10px;
+  align-content: start;
+}
+
+.inventory-list li {
+  min-height: 8px;
+}
+
+.inventory-item {
+  font-family: "Silkscreen", "Tiny5", "Courier New", Courier, monospace;
+  border: 0;
+  padding: 0;
+  color: var(--inventory-text);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font-size: 7px;
+  line-height: 1.05;
+}
+
+.inventory-item:hover,
+.inventory-item:focus-visible,
+.inventory-item.is-selected {
+  color: var(--verb-active);
+  outline: none;
+}
+
+.inventory-empty {
+  font-family: "Silkscreen", "Tiny5", "Courier New", Courier, monospace;
+  color: #705b95;
+  grid-column: 1 / -1;
+  font-size: 7px;
+  line-height: 1.05;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 420px), (max-height: 320px) {
+  body {
+    place-items: start center;
+  }
+}
