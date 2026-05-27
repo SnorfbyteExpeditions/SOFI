@@ -247,7 +247,7 @@ button {
 
 .command-panel {
   display: grid;
-  grid-template-rows: 18px 78px;
+  grid-template-rows: 28px 68px;
   background: var(--panel-dark);
   border-top: 1px solid var(--panel-line);
 }
@@ -259,11 +259,12 @@ button {
   margin: 0;
   color: var(--action-text);
   font-size: 7px;
-  line-height: 1;
+  line-height: 1.15;
   border-bottom: 1px solid var(--panel-line);
-  white-space: nowrap;
+  white-space: normal;
   overflow: hidden;
-  padding: 0 4px;
+  padding: 2px 4px;
+  text-align: center;
 }
 
 .panel-grid {
