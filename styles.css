@@ -201,6 +201,7 @@ button {
   bottom: 15px;
   width: 12px;
   height: 34px;
+  transform-origin: bottom center;
   transition: left var(--walk-duration, 600ms) steps(4), bottom var(--walk-duration, 600ms) steps(4);
   pointer-events: none;
 }

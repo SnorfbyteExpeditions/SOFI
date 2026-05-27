@@ -81,7 +81,7 @@ const scenes = {
   },
   sauna: {
     id: "sauna",
-    name: "Konttori Sauna",
+    name: "Hotfix Sauna",
     background: "images/KonttoriSauna.png",
     walkMessage: "The distant sound of seagulls mixes with someone debugging in Swedish.",
     playerSpawn: { left: 286, bottom: 15 },
@@ -113,15 +113,24 @@ const scenes = {
   saunaInterior: {
     id: "saunaInterior",
     name: "Sauna Interior",
-    background: "images/HqCoffeeroom.png",
-    walkMessage: "You pace around the konttori sauna interior.",
+    background: "images/saunaInterior.gif",
+    playerScale: 3,
+    playerBottomOffset: -45,
+    walkMessage: "I can't tell if he's guru meditating... or waiting for a software update.",
     playerSpawn: { left: 34, bottom: 15 },
     playerBounds: {
       minLeft: 10,
-      maxLeft: 298,
+      maxLeft: 250,
       fixedBottom: 15,
     },
-    hotspots: {},
+    hotspots: {
+      benchGuy: {
+        target: "benchGuy",
+        label: "Sauna Guru",
+        rect: { left: 110, bottom: 58, width: 36, height: 56 },
+        walkTo: { left: 120, bottom: 15 },
+      },
+    },
     exits: {
       left: {
         edge: "left",
@@ -260,6 +269,29 @@ const targets = {
       },
       debug() {
         setMessage("The duck is bug free.");
+      },
+    },
+  },
+  benchGuy: {
+    name: "Sauna Guru",
+    verbs: {
+      walk() {
+        setMessage("You approach the Sauna Guru respectfully.");
+      },
+      look() {
+        setMessage("He stares into the steam like it contains production logs.");
+      },
+      talk() {
+        setMessage("The Sauna Guru murmurs: Silence is just debugging without a keyboard.");
+      },
+      pickup() {
+        setMessage("You are not strong enough to lift his aura.");
+      },
+      use() {
+        setMessage("That would interrupt an important enlightenment sprint.");
+      },
+      debug() {
+        setMessage("He says: First, reproduce the problem. Then breathe.");
       },
     },
   },
@@ -478,6 +510,7 @@ function renderScene() {
   sceneBackgroundEl.src = scene.background;
   sceneBackgroundEl.alt = "";
   sceneEl.setAttribute("aria-label", scene.name);
+  playerEl.style.transform = `scale(${scene.playerScale ?? 1})`;
 
   hotspotButtons.forEach((button) => {
     const hotspot = scene.hotspots[button.dataset.target];
@@ -504,13 +537,14 @@ function renderScene() {
 }
 
 function movePlayer(position) {
+  const scene = getCurrentScene();
   const distance = Math.abs(position.left - state.playerPosition.left);
   const duration = clamp(Math.round((distance / 180) * 1000), 150, 900);
 
   playerEl.style.setProperty("--walk-duration", `${duration}ms`);
   state.playerPosition = { ...position };
   playerEl.style.left = `${position.left}px`;
-  playerEl.style.bottom = `${position.bottom}px`;
+  playerEl.style.bottom = `${position.bottom + (scene.playerBottomOffset ?? 0)}px`;
 
   return duration;
 }
