@@ -1,10 +1,12 @@
 const sceneEl = document.getElementById("scene");
+const sceneBackgroundEl = document.querySelector(".scene-background");
 const playerEl = document.getElementById("player");
 const actionLineEl = document.getElementById("action-line");
 const inventoryListEl = document.getElementById("inventory-list");
 const verbButtons = Array.from(document.querySelectorAll(".verb"));
 const hotspotButtons = Array.from(document.querySelectorAll(".hotspot"));
 const rootStyle = document.documentElement.style;
+let pendingInteractionTimer = null;
 
 const verbLabels = {
   walk: "Walk to",
@@ -16,6 +18,8 @@ const verbLabels = {
 };
 
 const state = {
+  currentSceneId: "campusExterior",
+  playerPosition: { left: 152, bottom: 15 },
   selectedVerb: "walk",
   selectedInventory: null,
   hoverTarget: null,
@@ -28,10 +32,46 @@ const state = {
   },
 };
 
+const scenes = {
+  campusExterior: {
+    id: "campusExterior",
+    name: "Campus Exterior",
+    background: "images/DomusBothnica_pixelated.png",
+    playerSpawn: { left: 152, bottom: 15 },
+    playerBounds: {
+      minLeft: 10,
+      maxLeft: 298,
+      fixedBottom: 15,
+    },
+    hotspots: {
+      mentor: {
+        target: "mentor",
+        label: "Tewo",
+        rect: { left: 12, bottom: 12, width: 42, height: 54 },
+        walkTo: { left: 27, bottom: 15 },
+      },
+      duck: {
+        target: "duck",
+        label: "rubber duck",
+        rect: { left: 188, bottom: 15, width: 16, height: 12 },
+        walkTo: { left: 190, bottom: 15 },
+        hiddenWhen: "duckCollected",
+      },
+      kiosk: {
+        target: "kiosk",
+        label: "kiosk terminal",
+        rect: { left: 248, bottom: 14, width: 38, height: 60 },
+        walkTo: { left: 261, bottom: 15 },
+      },
+    },
+  },
+};
+
+state.playerPosition = { ...scenes[state.currentSceneId].playerSpawn };
+
 const targets = {
   mentor: {
     name: "Tewo",
-    walkTo: { left: 20, bottom: 15 },
     verbs: {
       walk() {
         setMessage("You walk over to Tewo.");
@@ -66,7 +106,6 @@ const targets = {
   },
   kiosk: {
     name: "kiosk terminal",
-    walkTo: { left: 78, bottom: 16 },
     verbs: {
       walk() {
         setMessage("You walk to the kiosk terminal.");
@@ -127,7 +166,6 @@ const targets = {
   },
   duck: {
     name: "rubber duck",
-    walkTo: { left: 63, bottom: 14 },
     verbs: {
       walk() {
         setMessage("You walk to the rubber duck.");
@@ -200,6 +238,7 @@ sceneEl.addEventListener("click", (event) => {
     return;
   }
 
+  clearPendingInteraction();
   movePlayerToPoint(event);
 
   if (state.selectedVerb === "walk") {
@@ -216,12 +255,14 @@ sceneEl.addEventListener("click", (event) => {
 });
 
 renderInventory();
+renderScene();
 renderActionLine();
 updateGameScale();
 
 window.addEventListener("resize", updateGameScale);
 
 function selectVerb(verb) {
+  clearPendingInteraction();
   state.selectedVerb = verb;
   state.message = "";
 
@@ -233,11 +274,13 @@ function selectVerb(verb) {
 }
 
 function interactWithTarget(key) {
-  const target = targets[key];
-  movePlayer(target.walkTo);
-  target.verbs[state.selectedVerb]();
-  renderInventory();
-  renderActionLine();
+  const hotspot = getCurrentScene().hotspots[key];
+
+  if (!hotspot) {
+    return;
+  }
+
+  queueInteraction(key, hotspot.walkTo, state.selectedVerb, state.selectedInventory);
 }
 
 function renderActionLine() {
@@ -317,6 +360,7 @@ function renderInventory() {
     });
 
     button.addEventListener("click", () => {
+      clearPendingInteraction();
       state.selectedInventory = state.selectedInventory === button.dataset.item ? null : button.dataset.item;
       state.message = "";
       renderInventory();
@@ -325,18 +369,55 @@ function renderInventory() {
   });
 }
 
+function renderScene() {
+  const scene = getCurrentScene();
+
+  sceneBackgroundEl.src = scene.background;
+  sceneBackgroundEl.alt = "";
+
+  hotspotButtons.forEach((button) => {
+    const hotspot = scene.hotspots[button.dataset.target];
+
+    if (!hotspot) {
+      button.hidden = true;
+      return;
+    }
+
+    const isHidden = hotspot.hiddenWhen ? Boolean(state.flags[hotspot.hiddenWhen]) : false;
+    button.hidden = isHidden;
+
+    if (isHidden) {
+      return;
+    }
+
+    button.style.left = `${hotspot.rect.left}px`;
+    button.style.bottom = `${hotspot.rect.bottom}px`;
+    button.style.width = `${hotspot.rect.width}px`;
+    button.style.height = `${hotspot.rect.height}px`;
+  });
+
+  movePlayer(state.playerPosition);
+}
+
 function movePlayer(position) {
+  const distance = Math.abs(position.left - state.playerPosition.left);
+  const duration = clamp(Math.round((distance / 180) * 1000), 150, 900);
+
+  playerEl.style.setProperty("--walk-duration", `${duration}ms`);
+  state.playerPosition = { ...position };
   playerEl.style.left = `${position.left}px`;
   playerEl.style.bottom = `${position.bottom}px`;
+
+  return duration;
 }
 
 function movePlayerToPoint(event) {
+  const scene = getCurrentScene();
   const rect = sceneEl.getBoundingClientRect();
   const left = ((event.clientX - rect.left) / rect.width) * 320;
-  const bottom = ((rect.bottom - event.clientY) / rect.height) * 144;
   movePlayer({
-    left: clamp(Math.round(left) - 6, 10, 298),
-    bottom: clamp(Math.round(bottom) - 18, 12, 30),
+    left: clamp(Math.round(left) - 6, scene.playerBounds.minLeft, scene.playerBounds.maxLeft),
+    bottom: scene.playerBounds.fixedBottom,
   });
 }
 
@@ -345,17 +426,70 @@ function clamp(value, min, max) {
 }
 
 function disableTarget(key) {
-  const button = document.querySelector(`[data-target="${key}"]`);
+  const hotspot = getCurrentScene().hotspots[key];
 
-  if (!button) {
+  if (!hotspot?.hiddenWhen) {
     return;
   }
 
-  button.disabled = true;
-  button.style.display = "none";
+  state.flags[hotspot.hiddenWhen] = true;
+  renderScene();
 }
 
 function updateGameScale() {
   const scale = Math.max(1, Math.floor(Math.min((window.innerWidth - 16) / 320, (window.innerHeight - 16) / 240)));
   rootStyle.setProperty("--game-scale", String(scale));
+}
+
+function getCurrentScene() {
+  return scenes[state.currentSceneId];
+}
+
+function queueInteraction(key, position, verb, inventoryItem) {
+  const isAlreadyThere = state.playerPosition.left === position.left && state.playerPosition.bottom === position.bottom;
+  const duration = movePlayer(position);
+
+  clearPendingInteraction();
+
+  if (verb === "walk") {
+    targets[key].verbs.walk();
+    renderActionLine();
+    return;
+  }
+
+  if (isAlreadyThere) {
+    runInteraction(key, verb, inventoryItem);
+    return;
+  }
+
+  pendingInteractionTimer = window.setTimeout(() => {
+    pendingInteractionTimer = null;
+    runInteraction(key, verb, inventoryItem);
+  }, duration);
+}
+
+function runInteraction(key, verb, inventoryItem) {
+  const target = targets[key];
+  const previousVerb = state.selectedVerb;
+  const previousInventory = state.selectedInventory;
+
+  state.selectedVerb = verb;
+  state.selectedInventory = inventoryItem;
+
+  target.verbs[verb]();
+  state.selectedVerb = previousVerb;
+  state.selectedInventory = previousInventory;
+
+  renderInventory();
+  renderScene();
+  renderActionLine();
+}
+
+function clearPendingInteraction() {
+  if (pendingInteractionTimer === null) {
+    return;
+  }
+
+  window.clearTimeout(pendingInteractionTimer);
+  pendingInteractionTimer = null;
 }
