@@ -4,6 +4,39 @@
 
 Build a **Monkey Island–inspired point-and-click adventure game** with a humorous and modern twist during Wapice's Leap of Fate hackathon on 28.5.2026.
 
+## 🚧 Current Prototype Status
+
+This repository now contains an **early playable browser prototype** built with static files:
+
+* `index.html`
+* `styles.css`
+* `game.js`
+
+### Currently implemented:
+
+* One playable scene: **Campus Exterior**
+* Retro LucasArts-inspired verb UI
+* Six verbs: **Walk to, Look at, Talk to, Pick up, Use, Debug**
+* Horizontal click-to-walk movement
+* Basic inventory system
+* Hotspot interactions that trigger after Johan reaches the target
+* Simple prototype puzzle chain:
+  * pick up the rubber duck
+  * talk to Tewo
+  * debug the kiosk terminal
+  * receive an Access Badge
+
+### Not implemented yet:
+
+* Scene switching between multiple locations
+* Dedicated dialogue box system
+* Final vertical-slice quest flow from the issue list
+* Dialogue variation / AI-generated dialogue
+
+### Run locally:
+
+Open `index.html` in a browser.
+
 The player controls:
 
 > **Johan Devsson** – an aspiring software developer with zero real-world experience but enormous confidence.
@@ -45,15 +78,15 @@ The game takes place in a stylized, semi-fictional version of Palosaari with mul
 ### Core mechanics:
 
 * Point-and-click interaction
-* Character walks around between scenes
+* Character walks around the current scene
 * Dialogue-driven progression
 * Inventory-based puzzles
 
 ### Unique twist:
 
-* **AI-generated dialogue**
+* **Optional AI-generated dialogue**
   * Plot and logic stay fixed
-  * Dialogue varies each playthrough
+  * Dialogue may vary each playthrough in a later version
   * Humor-driven interactions
 
 ***
@@ -80,7 +113,7 @@ This allows:
 
 #### ✅ Include:
 
-* 1–2 scenes (e.g., kiosk + campus)
+* 1-2 scenes (e.g., kiosk + campus)
 * Player movement (click-to-walk)
 * 1 NPC interaction
 * 1 simple puzzle chain
@@ -117,10 +150,10 @@ Focus on:
 Build in order:
 
 1. Movement (click-to-walk)
-2. Scene switching
-3. Interaction system
-4. Dialogue
-5. Inventory
+2. Interaction system
+3. Inventory
+4. Scene switching
+5. Dialogue
 6. Puzzle
 
 ***

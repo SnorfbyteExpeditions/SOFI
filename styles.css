@@ -201,7 +201,8 @@ button {
   bottom: 15px;
   width: 12px;
   height: 34px;
-  transition: left 240ms steps(4), bottom 240ms steps(4);
+  transform-origin: bottom center;
+  transition: left var(--walk-duration, 600ms) steps(4), bottom var(--walk-duration, 600ms) steps(4);
   pointer-events: none;
 }
 
@@ -247,7 +248,7 @@ button {
 
 .command-panel {
   display: grid;
-  grid-template-rows: 18px 78px;
+  grid-template-rows: 28px 68px;
   background: var(--panel-dark);
   border-top: 1px solid var(--panel-line);
 }
@@ -259,11 +260,12 @@ button {
   margin: 0;
   color: var(--action-text);
   font-size: 7px;
-  line-height: 1;
+  line-height: 1.15;
   border-bottom: 1px solid var(--panel-line);
-  white-space: nowrap;
+  white-space: normal;
   overflow: hidden;
-  padding: 0 4px;
+  padding: 2px 4px;
+  text-align: center;
 }
 
 .panel-grid {

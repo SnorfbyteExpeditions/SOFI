@@ -1,10 +1,14 @@
 const sceneEl = document.getElementById("scene");
+const sceneBackgroundEl = document.querySelector(".scene-background");
 const playerEl = document.getElementById("player");
 const actionLineEl = document.getElementById("action-line");
 const inventoryListEl = document.getElementById("inventory-list");
 const verbButtons = Array.from(document.querySelectorAll(".verb"));
 const hotspotButtons = Array.from(document.querySelectorAll(".hotspot"));
 const rootStyle = document.documentElement.style;
+const SCENE_NATIVE_WIDTH = 320;
+const SCENE_NATIVE_HEIGHT = 144;
+let pendingInteractionTimer = null;
 
 const verbLabels = {
   walk: "Walk to",
@@ -16,9 +20,12 @@ const verbLabels = {
 };
 
 const state = {
+  currentSceneId: "campusExterior",
+  playerPosition: { left: 152, bottom: 15 },
   selectedVerb: "walk",
   selectedInventory: null,
   hoverTarget: null,
+  hoverExitText: "",
   message: "",
   inventory: [],
   flags: {
@@ -28,10 +35,120 @@ const state = {
   },
 };
 
+const scenes = {
+  campusExterior: {
+    id: "campusExterior",
+    name: "Code Temple",
+    background: "images/DomusBothnica_pixelated.png",
+    walkMessage: "You walk across the street, trying to look like you totally belong in this codebase.",
+    playerSpawn: { left: 152, bottom: 15 },
+    playerBounds: {
+      minLeft: 10,
+      maxLeft: 298,
+      fixedBottom: 15,
+    },
+    hotspots: {
+      mentor: {
+        target: "mentor",
+        label: "Tewo",
+        rect: { left: 12, bottom: 12, width: 42, height: 54 },
+        walkTo: { left: 27, bottom: 15 },
+      },
+      duck: {
+        target: "duck",
+        label: "rubber duck",
+        rect: { left: 188, bottom: 15, width: 16, height: 12 },
+        walkTo: { left: 190, bottom: 15 },
+        hiddenWhen: "duckCollected",
+      },
+      kiosk: {
+        target: "kiosk",
+        label: "kiosk terminal",
+        rect: { left: 248, bottom: 14, width: 38, height: 60 },
+        walkTo: { left: 261, bottom: 15 },
+      },
+    },
+    exits: {
+      left: {
+        edge: "left",
+        destinationSceneId: "sauna",
+        destinationSpawn: { left: 286, bottom: 15 },
+        walkTo: { left: 10, bottom: 15 },
+        triggerWidth: 24,
+        message: "You arrive to the Hotfix sauna.",
+      },
+    },
+  },
+  sauna: {
+    id: "sauna",
+    name: "Hotfix Sauna",
+    background: "images/KonttoriSauna.png",
+    walkMessage: "The distant sound of seagulls mixes with someone debugging in Swedish.",
+    playerSpawn: { left: 286, bottom: 15 },
+    playerBounds: {
+      minLeft: 10,
+      maxLeft: 298,
+      fixedBottom: 15,
+    },
+    hotspots: {},
+    exits: {
+      right: {
+        edge: "right",
+        destinationSceneId: "campusExterior",
+        destinationSpawn: { left: 16, bottom: 15 },
+        walkTo: { left: 298, bottom: 15 },
+        triggerWidth: 24,
+        message: "You arrive at the Code Temple.",
+      },
+      secretDoor: {
+        rect: { left: 119, bottom: 18, width: 15, height: 96 },
+        destinationSceneId: "saunaInterior",
+        destinationSpawn: { left: 34, bottom: 15 },
+        walkTo: { left: 110, bottom: 15 },
+        hoverText: "Enter Hotfix sauna",
+        message: "You slip through a hidden door behind the spruce.",
+      },
+    },
+  },
+  saunaInterior: {
+    id: "saunaInterior",
+    name: "Sauna Interior",
+    background: "images/saunaInterior.gif",
+    playerScale: 3,
+    playerBottomOffset: -45,
+    walkMessage: "I can't tell if he's guru meditating... or waiting for a software update.",
+    playerSpawn: { left: 34, bottom: 15 },
+    playerBounds: {
+      minLeft: 10,
+      maxLeft: 250,
+      fixedBottom: 15,
+    },
+    hotspots: {
+      benchGuy: {
+        target: "benchGuy",
+        label: "Sauna Guru",
+        rect: { left: 110, bottom: 58, width: 36, height: 56 },
+        walkTo: { left: 120, bottom: 15 },
+      },
+    },
+    exits: {
+      left: {
+        edge: "left",
+        destinationSceneId: "sauna",
+        destinationSpawn: { left: 152, bottom: 15 },
+        walkTo: { left: 10, bottom: 15 },
+        triggerWidth: 24,
+        message: "You step back out into the sauna yard.",
+      },
+    },
+  },
+};
+
+state.playerPosition = { ...scenes[state.currentSceneId].playerSpawn };
+
 const targets = {
   mentor: {
     name: "Tewo",
-    walkTo: { left: 20, bottom: 15 },
     verbs: {
       walk() {
         setMessage("You walk over to Tewo.");
@@ -66,7 +183,6 @@ const targets = {
   },
   kiosk: {
     name: "kiosk terminal",
-    walkTo: { left: 78, bottom: 16 },
     verbs: {
       walk() {
         setMessage("You walk to the kiosk terminal.");
@@ -127,7 +243,6 @@ const targets = {
   },
   duck: {
     name: "rubber duck",
-    walkTo: { left: 63, bottom: 14 },
     verbs: {
       walk() {
         setMessage("You walk to the rubber duck.");
@@ -154,6 +269,29 @@ const targets = {
       },
       debug() {
         setMessage("The duck is bug free.");
+      },
+    },
+  },
+  benchGuy: {
+    name: "Sauna Guru",
+    verbs: {
+      walk() {
+        setMessage("You approach the Sauna Guru respectfully.");
+      },
+      look() {
+        setMessage("He stares into the steam like it contains production logs.");
+      },
+      talk() {
+        setMessage("The Sauna Guru murmurs: Silence is just debugging without a keyboard.");
+      },
+      pickup() {
+        setMessage("You are not strong enough to lift his aura.");
+      },
+      use() {
+        setMessage("That would interrupt an important enlightenment sprint.");
+      },
+      debug() {
+        setMessage("He says: First, reproduce the problem. Then breathe.");
       },
     },
   },
@@ -200,28 +338,61 @@ sceneEl.addEventListener("click", (event) => {
     return;
   }
 
-  movePlayerToPoint(event);
+  const scenePoint = getScenePoint(event);
 
   if (state.selectedVerb === "walk") {
-    setMessage("You walk across the street, trying to look like you totally belong in this codebase.");
+    const exit = getSceneExitAtPoint(scenePoint);
+
+    if (exit) {
+      queueSceneExit(exit);
+      return;
+    }
+  }
+
+  clearPendingInteraction();
+  movePlayerToPoint(scenePoint.left);
+
+  if (state.selectedVerb === "walk") {
+    setMessage(getCurrentScene().walkMessage);
+    renderActionLine();
     return;
   }
 
   if (state.selectedVerb === "use" && state.selectedInventory) {
     setMessage(`Use ${state.selectedInventory} with what?`);
+    renderActionLine();
     return;
   }
 
   setMessage(`${verbLabels[state.selectedVerb]} what?`);
+  renderActionLine();
+});
+
+sceneEl.addEventListener("mousemove", (event) => {
+  if (event.target.closest(".hotspot")) {
+    state.hoverExitText = "";
+    return;
+  }
+
+  const exit = getSceneExitAtPoint(getScenePoint(event));
+  state.hoverExitText = exit?.hoverText ?? "";
+  renderActionLine();
+});
+
+sceneEl.addEventListener("mouseleave", () => {
+  state.hoverExitText = "";
+  renderActionLine();
 });
 
 renderInventory();
+renderScene();
 renderActionLine();
 updateGameScale();
 
 window.addEventListener("resize", updateGameScale);
 
 function selectVerb(verb) {
+  clearPendingInteraction();
   state.selectedVerb = verb;
   state.message = "";
 
@@ -233,16 +404,23 @@ function selectVerb(verb) {
 }
 
 function interactWithTarget(key) {
-  const target = targets[key];
-  movePlayer(target.walkTo);
-  target.verbs[state.selectedVerb]();
-  renderInventory();
-  renderActionLine();
+  const hotspot = getCurrentScene().hotspots[key];
+
+  if (!hotspot) {
+    return;
+  }
+
+  queueInteraction(key, hotspot.walkTo, state.selectedVerb, state.selectedInventory);
 }
 
 function renderActionLine() {
   if (state.hoverTarget) {
     actionLineEl.textContent = buildCommandText(state.hoverTarget);
+    return;
+  }
+
+  if (state.hoverExitText) {
+    actionLineEl.textContent = state.hoverExitText;
     return;
   }
 
@@ -317,6 +495,7 @@ function renderInventory() {
     });
 
     button.addEventListener("click", () => {
+      clearPendingInteraction();
       state.selectedInventory = state.selectedInventory === button.dataset.item ? null : button.dataset.item;
       state.message = "";
       renderInventory();
@@ -325,19 +504,67 @@ function renderInventory() {
   });
 }
 
-function movePlayer(position) {
-  playerEl.style.left = `${position.left}px`;
-  playerEl.style.bottom = `${position.bottom}px`;
+function renderScene() {
+  const scene = getCurrentScene();
+
+  sceneBackgroundEl.src = scene.background;
+  sceneBackgroundEl.alt = "";
+  sceneEl.setAttribute("aria-label", scene.name);
+  playerEl.style.transform = `scale(${scene.playerScale ?? 1})`;
+
+  hotspotButtons.forEach((button) => {
+    const hotspot = scene.hotspots[button.dataset.target];
+
+    if (!hotspot) {
+      button.hidden = true;
+      return;
+    }
+
+    const isHidden = hotspot.hiddenWhen ? Boolean(state.flags[hotspot.hiddenWhen]) : false;
+    button.hidden = isHidden;
+
+    if (isHidden) {
+      return;
+    }
+
+    button.style.left = `${hotspot.rect.left}px`;
+    button.style.bottom = `${hotspot.rect.bottom}px`;
+    button.style.width = `${hotspot.rect.width}px`;
+    button.style.height = `${hotspot.rect.height}px`;
+  });
+
+  movePlayer(state.playerPosition);
 }
 
-function movePlayerToPoint(event) {
-  const rect = sceneEl.getBoundingClientRect();
-  const left = ((event.clientX - rect.left) / rect.width) * 320;
-  const bottom = ((rect.bottom - event.clientY) / rect.height) * 144;
+function movePlayer(position) {
+  const scene = getCurrentScene();
+  const distance = Math.abs(position.left - state.playerPosition.left);
+  const duration = clamp(Math.round((distance / 180) * 1000), 150, 900);
+
+  playerEl.style.setProperty("--walk-duration", `${duration}ms`);
+  state.playerPosition = { ...position };
+  playerEl.style.left = `${position.left}px`;
+  playerEl.style.bottom = `${position.bottom + (scene.playerBottomOffset ?? 0)}px`;
+
+  return duration;
+}
+
+function movePlayerToPoint(left) {
+  const scene = getCurrentScene();
+
   movePlayer({
-    left: clamp(Math.round(left) - 6, 10, 298),
-    bottom: clamp(Math.round(bottom) - 18, 12, 30),
+    left: clamp(Math.round(left) - 6, scene.playerBounds.minLeft, scene.playerBounds.maxLeft),
+    bottom: scene.playerBounds.fixedBottom,
   });
+}
+
+function getScenePoint(event) {
+  const rect = sceneEl.getBoundingClientRect();
+
+  return {
+    left: ((event.clientX - rect.left) / rect.width) * SCENE_NATIVE_WIDTH,
+    bottom: ((rect.bottom - event.clientY) / rect.height) * SCENE_NATIVE_HEIGHT,
+  };
 }
 
 function clamp(value, min, max) {
@@ -345,17 +572,128 @@ function clamp(value, min, max) {
 }
 
 function disableTarget(key) {
-  const button = document.querySelector(`[data-target="${key}"]`);
+  const hotspot = getCurrentScene().hotspots[key];
 
-  if (!button) {
+  if (!hotspot?.hiddenWhen) {
     return;
   }
 
-  button.disabled = true;
-  button.style.display = "none";
+  state.flags[hotspot.hiddenWhen] = true;
+  renderScene();
 }
 
 function updateGameScale() {
   const scale = Math.max(1, Math.floor(Math.min((window.innerWidth - 16) / 320, (window.innerHeight - 16) / 240)));
   rootStyle.setProperty("--game-scale", String(scale));
+}
+
+function getCurrentScene() {
+  return scenes[state.currentSceneId];
+}
+
+function getSceneExitAtPoint(scenePoint) {
+  const exits = Object.values(getCurrentScene().exits ?? {});
+
+  return exits.find((exit) => isPointInsideExit(scenePoint, exit)) ?? null;
+}
+
+function isPointInsideExit(scenePoint, exit) {
+  if (exit.rect) {
+    return isPointInsideRect(scenePoint, exit.rect);
+  }
+
+  if (exit.edge === "left") {
+    return scenePoint.left <= exit.triggerWidth;
+  }
+
+  if (exit.edge === "right") {
+    return scenePoint.left >= SCENE_NATIVE_WIDTH - exit.triggerWidth;
+  }
+
+  return false;
+}
+
+function isPointInsideRect(scenePoint, rect) {
+  return scenePoint.left >= rect.left
+    && scenePoint.left <= rect.left + rect.width
+    && scenePoint.bottom >= rect.bottom
+    && scenePoint.bottom <= rect.bottom + rect.height;
+}
+
+function switchScene(sceneId, playerPosition, message = "") {
+  clearPendingInteraction();
+  state.currentSceneId = sceneId;
+  state.playerPosition = { ...playerPosition };
+  state.hoverTarget = null;
+  state.hoverExitText = "";
+  state.message = message;
+
+  renderScene();
+  renderActionLine();
+}
+
+function queueInteraction(key, position, verb, inventoryItem) {
+  const isAlreadyThere = state.playerPosition.left === position.left && state.playerPosition.bottom === position.bottom;
+  const duration = movePlayer(position);
+
+  clearPendingInteraction();
+
+  if (verb === "walk") {
+    targets[key].verbs.walk();
+    renderActionLine();
+    return;
+  }
+
+  if (isAlreadyThere) {
+    runInteraction(key, verb, inventoryItem);
+    return;
+  }
+
+  pendingInteractionTimer = window.setTimeout(() => {
+    pendingInteractionTimer = null;
+    runInteraction(key, verb, inventoryItem);
+  }, duration);
+}
+
+function queueSceneExit(exit) {
+  const isAlreadyThere = state.playerPosition.left === exit.walkTo.left && state.playerPosition.bottom === exit.walkTo.bottom;
+  const duration = movePlayer(exit.walkTo);
+
+  clearPendingInteraction();
+
+  if (isAlreadyThere) {
+    switchScene(exit.destinationSceneId, exit.destinationSpawn, exit.message);
+    return;
+  }
+
+  pendingInteractionTimer = window.setTimeout(() => {
+    pendingInteractionTimer = null;
+    switchScene(exit.destinationSceneId, exit.destinationSpawn, exit.message);
+  }, duration);
+}
+
+function runInteraction(key, verb, inventoryItem) {
+  const target = targets[key];
+  const previousVerb = state.selectedVerb;
+  const previousInventory = state.selectedInventory;
+
+  state.selectedVerb = verb;
+  state.selectedInventory = inventoryItem;
+
+  target.verbs[verb]();
+  state.selectedVerb = previousVerb;
+  state.selectedInventory = previousInventory;
+
+  renderInventory();
+  renderScene();
+  renderActionLine();
+}
+
+function clearPendingInteraction() {
+  if (pendingInteractionTimer === null) {
+    return;
+  }
+
+  window.clearTimeout(pendingInteractionTimer);
+  pendingInteractionTimer = null;
 }
