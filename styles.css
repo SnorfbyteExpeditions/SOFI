@@ -123,24 +123,31 @@ button {
 .hotspot-mentor {
   left: 12px;
   bottom: 12px;
-  width: 42px;
-  height: 54px;
+  width: 10px;
+  height: 30px;
 }
 
 .sprite-mentor {
   position: absolute;
-  left: 8px;
+  left: 0;
   bottom: 0;
-  width: 10px;
-  height: 28px;
-  background: #2b4db0;
-  box-shadow:
-    0 -8px 0 0 #f0be8f,
-    0 6px 0 0 #d05b7a,
-    0 14px 0 0 #25409b,
-    14px 0 0 0 #f0be8f,
-    14px 8px 0 0 #d05b7a,
-    14px 16px 0 0 #25409b;
+}
+
+.hotspot-peter {
+  left: 40px;
+  bottom: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.sprite-peter {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+}
+
+.img-npc, .img-player {
+  width: 100%;
 }
 
 .hotspot-kiosk {
@@ -200,7 +207,7 @@ button {
   left: 152px;
   bottom: 15px;
   width: 12px;
-  height: 34px;
+  height: 30px;
   transform-origin: bottom center;
   transition: left var(--walk-duration, 600ms) steps(4), bottom var(--walk-duration, 600ms) steps(4);
   pointer-events: none;
