@@ -143,13 +143,13 @@ const scenes = {
     id: "aula",
     name: "Lobby",
     background: "images/HqLobby.png",
-    walkMessage: "You walk across the street, trying to look like you totally belong in this codebase.",
+    walkMessage: "You cautiously make your way past the front desk.",
     playerScale: 3,
     playerSpawn: { left: 152, bottom: 10 },
     playerBounds: {
       minLeft: 10,
       maxLeft: 298,
-      fixedBottom: 10,
+      fixedBottom: 0,
     },
     hotspots: {
       peter: {
@@ -164,16 +164,18 @@ const scenes = {
         edge: "left",
         destinationSceneId: "campusExterior",
         destinationSpawn: { left: 12, bottom: 20 },
-        walkTo: { left: 10, bottom: 15 },
+        walkTo: { left: 10, bottom: 0 },
         triggerWidth: 24,
+        hoverText: "Get outta here",
         message: "You go back outside.",
       },
       pastPeter: {
         edge: "right",
         destinationSceneId: "eastCorridor",
         destinationSpawn: { left: 250, bottom: 20 },
-        walkTo: { left: 200, bottom: 15 },
+        walkTo: { left: 280, bottom: 0 },
         triggerWidth: 24,
+        hoverText: "The inner sanctum",
         message: "You walk past Peter.",
       },
     },
@@ -211,13 +213,22 @@ const scenes = {
         message: "You enter the domain of JukkaBros",
       },
       southCorridor: {
-        rect: { left: 300, bottom: 100, width: 20, height: 50 },
+        rect: { left: 300, bottom: 70, width: 20, height: 80 },
         destinationSceneId: "southCorridor",
-        destinationSpawn: { left: 100, bottom: 20 },
-        walkTo: { left: 170, bottom: 70 },
+        destinationSpawn: { left: 170, bottom: 20 },
+        walkTo: { left: 300, bottom: 70 },
         triggerWidth: 24,
         hoverText: "The South Side Corridor",
         message: "You go towards the south corridor.",
+      },
+      aula: {
+        rect: { left: 200, bottom: 0, width: 100, height: 20 },
+        destinationSceneId: "aula",
+        destinationSpawn: { left: 260, bottom: 0 },
+        walkTo: { left: 260, bottom: 0 },
+        triggerWidth: 24,
+        hoverText: "The aula",
+        message: "You go back to the aula.",
       },
     },
   },
@@ -264,7 +275,7 @@ const scenes = {
         edge: "right",
         destinationSceneId: "eastCorridor",
         destinationSpawn: { left: 250, bottom: 20 },
-        walkTo: { left: 60, bottom: 15 },
+        walkTo: { left: 290, bottom: 0 },
         triggerWidth: 24,
         hoverText: "Towards the lobby",
         message: "You walk back towards the lobby.",
@@ -1153,6 +1164,10 @@ function startMainIntroSequence() {
 }
 
 function handleIntroAdvance() {
+  if (introCompleted) {
+    return;
+  }
+
   finishIntro();
 }
 
@@ -1162,6 +1177,10 @@ function handleIntroKeydown(event) {
   }
 
   event.preventDefault();
+  if (introCompleted) {
+    return;
+  }
+
   finishIntro();
 }
 
@@ -1173,6 +1192,7 @@ function finishIntro() {
   introCompleted = true;
   introVisualsVisible = false;
   clearIntroTimers();
+  introOverlayEl.removeEventListener("pointerdown", handleIntroAdvance);
   introOverlayEl.removeEventListener("click", handleIntroAdvance);
   introOverlayEl.removeEventListener("keydown", handleIntroKeydown);
   document.removeEventListener("pointerdown", handleIntroAdvance, true);

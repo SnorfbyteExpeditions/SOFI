@@ -59,6 +59,8 @@ button {
   place-items: center;
   background: #000000;
   cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
   opacity: 1;
   transition: opacity 500ms ease;
 }
