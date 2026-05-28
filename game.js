@@ -280,7 +280,7 @@ const scenes = {
       balcony: {
         rect: { left: 170, bottom: 80, width: 30, height: 60 },
         destinationSceneId: "balcony",
-        destinationSpawn: { left: 120, bottom: 20 },
+        destinationSpawn: { left: 120, bottom: 22 },
         walkTo: { left: 170, bottom: 80 },
         triggerWidth: 24,
         message: "You towards the balcony.",
@@ -363,9 +363,9 @@ const scenes = {
     playerScale: 2,
     playerSpawn: { left: 152, bottom: 15 },
     playerBounds: {
-      minLeft: 10,
-      maxLeft: 298,
-      fixedBottom: 15,
+      minLeft: 115,
+      maxLeft: 185,
+      fixedBottom: 22,
     },
     hotspots: {
     },
