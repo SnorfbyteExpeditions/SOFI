@@ -147,6 +147,7 @@ const scenes = {
         destinationSpawn: { left: 286, bottom: 15 },
         walkTo: { left: 10, bottom: 15 },
         triggerWidth: 12,
+        hoverText: "The Hotfix sauna",
         message: "You arrive to the Hotfix sauna.",
       },
       hqentrance: {
@@ -385,6 +386,7 @@ const scenes = {
         destinationSpawn: { left: 12, bottom: 20 },
         walkTo: { left: 10, bottom: 15 },
         triggerWidth: 24,
+        hoverText: "The balcony",
         message: "You walk around on the balcony.",
       },
       },
@@ -434,6 +436,7 @@ const scenes = {
         destinationSpawn: { left: 16, bottom: 15 },
         walkTo: { left: 298, bottom: 15 },
         triggerWidth: 24,
+        hoverText: "Back to the Code Temple",
         message: "You arrive at the Code Temple.",
       },
       secretDoor: {
@@ -474,6 +477,7 @@ const scenes = {
         destinationSpawn: { left: 152, bottom: 15 },
         walkTo: { left: 10, bottom: 15 },
         triggerWidth: 24,
+        hoverText: "Back to the sauna yard",
         message: "You step back out into the sauna yard.",
       },
     },
@@ -743,17 +747,20 @@ sceneEl.addEventListener("mousemove", (event) => {
 
   if (event.target.closest(".hotspot")) {
     state.hoverExitText = "";
+    sceneEl.style.cursor = "default";
     return;
   }
 
   const exit = getSceneExitAtPoint(state.devHelpPoint);
   state.hoverExitText = exit?.hoverText ?? "";
+  sceneEl.style.cursor = exit ? "pointer" : "default";
   renderActionLine();
 });
 
 sceneEl.addEventListener("mouseleave", () => {
   state.hoverExitText = "";
   state.devHelpPoint = null;
+  sceneEl.style.cursor = "default";
   renderDevHelpOverlay();
   renderActionLine();
 });
@@ -809,6 +816,11 @@ function interactWithTarget(key) {
 }
 
 function renderActionLine() {
+  if (state.hoverExitText) {
+    actionLineEl.textContent = state.hoverExitText;
+    return;
+  }
+
   if (state.message) {
     actionLineEl.textContent = state.message;
     return;
@@ -816,11 +828,6 @@ function renderActionLine() {
 
   if (state.hoverTarget) {
     actionLineEl.textContent = buildCommandText(state.hoverTarget);
-    return;
-  }
-
-  if (state.hoverExitText) {
-    actionLineEl.textContent = state.hoverExitText;
     return;
   }
 
@@ -918,6 +925,7 @@ function renderInventory() {
 function renderScene() {
   const scene = getCurrentScene();
 
+  sceneEl.style.cursor = "default";
   sceneBackgroundEl.src = scene.background;
   sceneBackgroundEl.alt = "";
   sceneEl.setAttribute("aria-label", scene.name);
