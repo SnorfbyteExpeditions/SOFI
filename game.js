@@ -433,7 +433,16 @@ const scenes = {
         hoverText: "The balcony",
         message: "You walk around on the balcony.",
       },
+      southCorridor: {
+        rect: { left: 0, bottom: 0, width: 320, height: 24 },
+        destinationSceneId: "southCorridor",
+        destinationSpawn: { left: 170, bottom: 15 },
+        walkTo: { left: 170, bottom: 15 },
+        triggerWidth: 24,
+        hoverText: "The South Side Corridor",
+        message: "You go towards the south corridor.",
       },
+    },
   },
   balcony: {
     id: "balcony",
