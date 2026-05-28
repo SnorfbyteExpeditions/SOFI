@@ -61,13 +61,13 @@ const introPreludeDuration = 6000;
 const introPreludeFadeDuration = 500;
 const introTitleLineIndex = 3;
 const introPreludeStages = [
-  "images/wapiceLogo.png",
+  "images/Wapice™Logo.png",
   "images/leapoffateproductions.png",
 ];
 const introLines = [
   "Deep in the Quark",
   "The Island of Fire™",
-  "Wapice - Leap Of Fate Productions",
+  "Wapice™ - Leap Of Fate Productions",
   "(c) 2026 All Rights Reserved",
   "Created and Designed by Johan, Johan and Tomas",
 ];
@@ -104,7 +104,7 @@ const scenes = {
       mentor: {
         target: "mentor",
         label: "Tewo",
-        rect: { left: 24, bottom: 12, width: 10, height: 30 },
+        rect: { left: 24, bottom: 8, width: 12, height: 36 },
         walkTo: { left: 27, bottom: 15 },
       },
       duck: {
@@ -135,7 +135,7 @@ const scenes = {
         destinationSceneId: "aula",
         destinationSpawn: { left: 12, bottom: 0 },
         walkTo: { left: 10, bottom: 15 },
-        hoverText: "Enter Wapice HQ",
+        hoverText: "Enter Wapice™ HQ",
         message: "You arrive in this temple of code. Peter the Code Guardian hears you looks up from behind his screens. (work in progress, don't judge me!)",
       },
     },
@@ -268,14 +268,7 @@ const scenes = {
       maxLeft: 100,
       fixedBottom: 15,
     },
-    hotspots: {
-      // peter: {
-      //   target: "peter",
-      //   label: "Peter the Code Guardian",
-      //   rect: { left: 195, bottom: 92, width: 20, height: 20 },
-      //   walkTo: { left: 20, bottom: 15 },
-      // },
-    },
+    hotspots: {},
     exits: {
       balcony: {
         rect: { left: 170, bottom: 80, width: 30, height: 60 },
@@ -284,7 +277,7 @@ const scenes = {
         walkTo: { left: 170, bottom: 80 },
         triggerWidth: 24,
         message: "You towards the balcony.",
-        hoverText: "The Wapice HQ Balcony™",
+        hoverText: "The Wapice™ HQ Balcony™",
       },
       jukkabrosRoom: {
         edge: "left",
@@ -294,6 +287,15 @@ const scenes = {
         triggerWidth: 24,
         hoverText: "JukkaBros' office",
         message: "You enter the domain of JukkaBros",
+      },
+      marketingRoom: {
+        rect: { left: 120, bottom: 40, width: 20, height: 80 },
+        destinationSceneId: "marketingRoom",
+        destinationSpawn: { left: 12, bottom: 20 },
+        walkTo: { left: 150, bottom: 100 },
+        triggerWidth: 24,
+        hoverText: "Wapice™ Marketing",
+        message: "Whoa! would you look at that view!",
       },
       eastCorridor: {
         edge: "right",
@@ -308,7 +310,7 @@ const scenes = {
   },
   jukkaBrosOffice: {
     id: "jukkaBrosOffice",
-    name: "Bow before the Steward of Wapice",
+    name: "Bow before the Steward of Wapice™",
     background: "images/scenes/HqJukkaBrosOffice.png",
     walkMessage: "You walk in awe before the mighty JukkaBros",
     playerScale: 4,
@@ -320,6 +322,38 @@ const scenes = {
       fixedBottom: 15,
     },
     hotspots: {
+    },
+    exits: {
+      eastCorridor: {
+        edge: "right",
+        destinationSceneId: "eastCorridor",
+        destinationSpawn: { left: 12, bottom: 20 },
+        walkTo: { left: 100, bottom: 15 },
+        triggerWidth: 24,
+        message: "You walk back towards the lobby.",
+      },
+    }
+  },
+  marketingRoom: {
+    id: "marketingRoom",
+    name: "Anssi's and Kaisa's Room",
+    background: "images/scenes/MarketingRoom.png",
+    walkMessage: "Whoa, marketing kicks ass!",
+    playerScale: 3,
+    playerBottomOffset: -25,
+    playerSpawn: { left: 152, bottom: 15 },
+    playerBounds: {
+      minLeft: 10,
+      maxLeft: 298,
+      fixedBottom: 15,
+    },
+    hotspots: {
+      anssi: {
+        target: "anssi",
+        label: "Anssi",
+        rect: { left: 140, bottom: 28, width: 28, height: 60 },
+        walkTo: { left: 120, bottom: 15 },
+      }
     },
     exits: {
       eastCorridor: {
@@ -357,7 +391,7 @@ const scenes = {
   },
   balcony: {
     id: "balcony",
-    name: "The Awesome Wapice HQ Balcony™",
+    name: "The Awesome Wapice™ HQ Balcony™",
     background: "images/scenes/balconyAnimation.gif",
     walkMessage: "You walk and look at the amazing views",
     playerScale: 2,
@@ -627,6 +661,34 @@ const targets = {
       },
       debug() {
         setMessage("No bugs found. Only sarcasm.");
+      },
+    },
+  },
+  anssi: {
+    name: "Anssi the Marketing Guy",
+    verbs: {
+      walk() {
+        setMessage("You walk over to Anssi.");
+      },
+      look() {
+        setMessage("Anssi smiles at you");
+      },
+      talk() {
+        setMessage("Anssy says: Marketing is awesome!");
+      },
+      pickup() {
+        setMessage("Come on dude, don't do that");
+      },
+      use() {
+        if (state.selectedInventory) {
+          setMessage(`Using ${state.selectedInventory} on Anssi gives him a marketing related idea.`);
+          return;
+        }
+
+        setMessage("Use what on Anssi?");
+      },
+      debug() {
+        setMessage("No bugs in marketing.");
       },
     },
   },
