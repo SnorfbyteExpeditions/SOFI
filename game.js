@@ -313,6 +313,15 @@ const scenes = {
         message: "You towards the balcony.",
         hoverText: "The Wapice™ HQ Balcony™",
       },
+      officeLandscape: {
+        rect: { left: 185, bottom: 80, width: 20, height: 35 },
+        destinationSceneId: "officeLandscape",
+        destinationSpawn: { left: 120, bottom: 30 },
+        walkTo: { left: 170, bottom: 80 },
+        triggerWidth: 24,
+        hoverText: "More office space",
+        message: "You wander into the innermost depths of Wapice HQ™.",
+      },
       jukkabrosRoom: {
         edge: "left",
         destinationSceneId: "jukkaBrosOffice",
@@ -405,12 +414,13 @@ const scenes = {
     id: "officeLandscape",
     name: "An empty office landscape",
     background: "images/scenes/HqOfficeLandscape.png",
-    walkMessage: "You walk along this ominous corridor",
+    walkMessage: "You all but get lost in this maze of cubicles.",
+    playerScale: 2,
     playerSpawn: { left: 152, bottom: 15 },
     playerBounds: {
       minLeft: 10,
       maxLeft: 298,
-      fixedBottom: 15,
+      fixedBottom: 30,
     },
     hotspots: {},
     exits: {
