@@ -317,7 +317,7 @@ const scenes = {
         edge: "left",
         destinationSceneId: "jukkaBrosOffice",
         destinationSpawn: { left: 12, bottom: 20 },
-        walkTo: { left: 150, bottom: 100 },
+        walkTo: { left: 0, bottom: 0 },
         triggerWidth: 24,
         hoverText: "JukkaBros' office",
         message: "You enter the domain of JukkaBros",
