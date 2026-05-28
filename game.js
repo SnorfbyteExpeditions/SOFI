@@ -65,7 +65,7 @@ const introPreludeStages = [
 ];
 const introLines = [
   "Deep in the Quark",
-  "The Island of Fire",
+  "The Island of Fire™",
   "Wapice - Leap Of Fate Productions",
   "TM (c) 2026 All Rights Reserved",
   "Created and Designed by Johan, Johan and Tomas",
@@ -256,11 +256,11 @@ const scenes = {
       balcony: {
         rect: { left: 170, bottom: 80, width: 30, height: 60 },
         destinationSceneId: "balcony",
-        destinationSpawn: { left: 100, bottom: 30 },
-        walkTo: { left: 70, bottom: 100 },
+        destinationSpawn: { left: 120, bottom: 20 },
+        walkTo: { left: 170, bottom: 80 },
         triggerWidth: 24,
         message: "You towards the balcony.",
-        hoverText: "The Wapice HQ Balcony(tm)",
+        hoverText: "The Wapice HQ Balcony™",
       },
       jukkabrosRoom: {
         edge: "left",
@@ -332,9 +332,10 @@ const scenes = {
   },
   balcony: {
     id: "balcony",
-    name: "The Awesome Wapice HQ Balcony(tm)",
+    name: "The Awesome Wapice HQ Balcony™",
     background: "images/balconyAnimation.gif",
     walkMessage: "You walk and look at the amazing views",
+    playerScale: 2,
     playerSpawn: { left: 152, bottom: 15 },
     playerBounds: {
       minLeft: 10,
@@ -344,13 +345,14 @@ const scenes = {
     hotspots: {
     },
     exits: {
-      eastCorridor: {
-        edge: "bottom",
-        destinationSceneId: "eastCorridor",
-        destinationSpawn: { left: 12, bottom: 20 },
-        walkTo: { left: 100, bottom: 15 },
+      southCorridor: {
+        rect: { left: 180, bottom: 30, width: 30, height: 70 },
+        destinationSceneId: "southCorridor",
+        destinationSpawn: { left: 170, bottom: 20 },
+        walkTo: { left: 190, bottom: 30 },
         triggerWidth: 24,
-        message: "You walk back towards the lobby.",
+        hoverText: "Inside",
+        message: "You return to the harsh, cold reality of the office.",
       },
     }
   },
