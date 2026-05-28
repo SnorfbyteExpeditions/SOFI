@@ -57,7 +57,7 @@ button {
   z-index: 20;
   display: grid;
   place-items: center;
-  background: #000000 url("images/secretoffireisland_intro.png") center center / contain no-repeat;
+  background: #000000;
   cursor: pointer;
   pointer-events: auto;
   touch-action: manipulation;
@@ -70,9 +70,43 @@ button {
   outline-offset: -4px;
 }
 
+.intro-prelude {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0;
+  transition: opacity 500ms ease;
+  z-index: 1;
+}
+
+.intro-prelude.is-visible {
+  opacity: 1;
+}
+
+.intro-main-scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0;
+  transition: opacity 500ms ease;
+  z-index: 0;
+}
+
+.intro-main-scene.is-visible {
+  opacity: 1;
+}
+
 .intro-copy {
   position: relative;
-  z-index: 1;
+  z-index: 3;
   width: min(88vw, 640px);
   min-height: 1.2em;
   display: grid;
@@ -81,9 +115,29 @@ button {
   font-family: "Silkscreen", "Tiny5", "Courier New", Courier, monospace;
   font-size: clamp(15px, 2.4vw, 24px);
   line-height: 1.2;
-  color: #bc44b2;
+  color: #cf58c4;
   text-shadow: 0 1px 0 #000000, 0 0 10px rgba(255, 255, 255, 0.08);
-  transform: translateY(52px);
+  transform: translate(-25px, 102px);
+}
+
+.intro-title {
+  position: absolute;
+  inset: 0;
+  width: min(90vw, 760px);
+  height: auto;
+  max-height: 62vh;
+  margin: auto;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  transform: translateY(-100px);
+  opacity: 0;
+  transition: opacity 520ms ease;
+  z-index: 2;
+}
+
+.intro-title.is-visible {
+  opacity: 1;
 }
 
 .intro-line {
