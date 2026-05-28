@@ -183,6 +183,15 @@ const scenes = {
         hoverText: "The South Side Corridor",
         message: "You go towards the south corridor.",
       },
+      aula: {
+        rect: { left: 200, bottom: 0, width: 100, height: 20 },
+        destinationSceneId: "aula",
+        destinationSpawn: { left: 260, bottom: 0 },
+        walkTo: { left: 260, bottom: 0 },
+        triggerWidth: 24,
+        hoverText: "The aula",
+        message: "You go back to the aula.",
+      },
     },
   },
   southCorridor: {
