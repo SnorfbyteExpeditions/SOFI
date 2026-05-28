@@ -28,10 +28,6 @@
   --window-border: #2d2d2d;
 }
 
-body.is-intro-active .game-stage {
-  visibility: hidden;
-}
-
 * {
   box-sizing: border-box;
 }
@@ -63,6 +59,8 @@ button {
   place-items: center;
   background: #000000 url("images/secretoffireisland_intro.png") center center / contain no-repeat;
   cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
   opacity: 1;
   transition: opacity 500ms ease;
 }

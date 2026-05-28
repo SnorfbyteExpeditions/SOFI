@@ -15,10 +15,6 @@ let introCompleted = false;
 let introTimers = [];
 let introExitTimer = null;
 
-if (introOverlayEl) {
-  document.body.classList.add("is-intro-active");
-}
-
 const verbLabels = {
   walk: "Walk to",
   look: "Look at",
@@ -967,8 +963,10 @@ function startIntroSequence() {
     return;
   }
 
+  introOverlayEl.addEventListener("pointerdown", handleIntroAdvance);
   introOverlayEl.addEventListener("click", handleIntroAdvance);
-  introOverlayEl.addEventListener("keydown", handleIntroKeydown);
+  document.addEventListener("pointerdown", handleIntroAdvance, true);
+  document.addEventListener("keydown", handleIntroKeydown, true);
 
   let delay = 600;
 
@@ -991,6 +989,10 @@ function startIntroSequence() {
 }
 
 function handleIntroAdvance() {
+  if (introCompleted) {
+    return;
+  }
+
   finishIntro();
 }
 
@@ -1000,6 +1002,10 @@ function handleIntroKeydown(event) {
   }
 
   event.preventDefault();
+  if (introCompleted) {
+    return;
+  }
+
   finishIntro();
 }
 
@@ -1010,15 +1016,11 @@ function finishIntro() {
 
   introCompleted = true;
   clearIntroTimers();
+  introOverlayEl.removeEventListener("pointerdown", handleIntroAdvance);
   introOverlayEl.removeEventListener("click", handleIntroAdvance);
-  introOverlayEl.removeEventListener("keydown", handleIntroKeydown);
-  document.body.classList.remove("is-intro-active");
-  document.body.classList.add("is-intro-exiting");
-
-  introExitTimer = window.setTimeout(() => {
-    introOverlayEl.hidden = true;
-    document.body.classList.remove("is-intro-exiting");
-  }, 500);
+  document.removeEventListener("pointerdown", handleIntroAdvance, true);
+  document.removeEventListener("keydown", handleIntroKeydown, true);
+  introOverlayEl.remove();
 }
 
 function clearIntroTimers() {
