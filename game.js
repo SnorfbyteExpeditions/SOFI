@@ -1,6 +1,8 @@
 const sceneEl = document.getElementById("scene");
 const sceneBackgroundEl = document.querySelector(".scene-background");
 const introAudioEl = document.getElementById("intro-audio");
+const gameAudioEl = document.getElementById("game-audio");
+const introStartButtonEl = document.getElementById("intro-start-button");
 const introPreludeEl = document.getElementById("intro-prelude");
 const introMainSceneEl = document.getElementById("intro-main-scene");
 const introTitleEl = document.querySelector(".intro-title");
@@ -10,6 +12,7 @@ const petersHead = document.getElementById("peters-head");
 const inventoryListEl = document.getElementById("inventory-list");
 const introOverlayEl = document.getElementById("intro-overlay");
 const introTextEl = document.getElementById("intro-text");
+const devHelpOverlayEl = document.getElementById("dev-help-overlay");
 const verbButtons = Array.from(document.querySelectorAll(".verb"));
 const hotspotButtons = Array.from(document.querySelectorAll(".hotspot"));
 const rootStyle = document.documentElement.style;
@@ -17,9 +20,9 @@ const SCENE_NATIVE_WIDTH = 320;
 const SCENE_NATIVE_HEIGHT = 144;
 let pendingInteractionTimer = null;
 let introCompleted = false;
+let introActivated = false;
 let introSequenceStarted = false;
 let introVisualsVisible = false;
-let introAudioUnmuted = false;
 let introPreludeTimer = null;
 let introTimers = [];
 let introExitTimer = null;
@@ -34,17 +37,22 @@ if (introOverlayEl) {
 
 if (introAudioEl) {
   introAudioEl.volume = 1;
-  introAudioEl.muted = true;
+  logIntroAudioState("audio-init");
   introAudioEl.addEventListener("loadeddata", handleIntroAudioReady);
   introAudioEl.addEventListener("canplaythrough", handleIntroAudioReady);
   introAudioEl.addEventListener("error", handleIntroAudioError);
-  document.addEventListener("pointerdown", startIntroAudioPlayback, { once: true, capture: true });
-  document.addEventListener("keydown", startIntroAudioPlayback, { once: true, capture: true });
-  document.addEventListener("pointermove", handleIntroAudioUnmuteOnMove, { capture: true });
-  document.addEventListener("mousemove", handleIntroAudioUnmuteOnMove, { capture: true });
-
-  startIntroAudioPlayback();
 }
+
+if (gameAudioEl) {
+  gameAudioEl.volume = 0.35;
+  gameAudioEl.muted = true;
+}
+
+if (introStartButtonEl) {
+  introStartButtonEl.addEventListener("click", handleIntroStartButtonClick);
+}
+
+document.addEventListener("keydown", handleDeveloperKeydown);
 
 const verbLabels = {
   walk: "Walk to",
@@ -57,19 +65,28 @@ const verbLabels = {
 
 const introLineVisibleDuration = 6000;
 const introLineGapDuration = 1500;
-const introPreludeDuration = 6000;
+const introPreludeDuration = 5000;
 const introPreludeFadeDuration = 500;
-const introTitleLineIndex = 3;
+const introTitleLineIndex = 2;
 const introPreludeStages = [
   "images/WapiceLogo.png",
   "images/leapoffateproductions.png",
 ];
 const introLines = [
   "Deep in the Quark",
-  "The Island of Fire™",
-  "Wapice™ - Leap Of Fate Productions",
-  "(c) 2026 All Rights Reserved",
-  "Created and Designed by Johan, Johan and Tomas",
+  "The Island of Fire",
+  "TM (c) 2026 All Rights Reserved",
+  "Created and Designed by Johan A, Johan S and Tomas I",
+  "Written and Programmed by ChatGPT-4",
+  "Background Art by Johan S and ChatGPT",
+  "Animation by nobody",
+  "Original Music by Michael Land...",
+  "...Barney Jones and Andy Newell of earwax productions...",
+  "...and Patrick Mundy",
+  "Produced by Wapice and Leap of Fate productions (Lassi Niemistö)",
+  "Special thanks to Leison Café...",
+  "Rubber ducks...",
+  "The person who said it's a quick hackathon project",
 ];
 
 const state = {
@@ -79,12 +96,14 @@ const state = {
   selectedInventory: null,
   hoverTarget: null,
   hoverExitText: "",
+  devHelpMode: false,
+  devHelpPoint: null,
   message: "",
   inventory: [],
   flags: {
     duckCollected: false,
     mentorHintUnlocked: false,
-    kioskFixed: false,
+    centaurFixed: false,
   },
 };
 
@@ -114,11 +133,11 @@ const scenes = {
         walkTo: { left: 190, bottom: 15 },
         hiddenWhen: "duckCollected",
       },
-      kiosk: {
-        target: "kiosk",
-        label: "kiosk terminal",
-        rect: { left: 248, bottom: 14, width: 38, height: 60 },
-        walkTo: { left: 261, bottom: 15 },
+      centaur: {
+        target: "centaur",
+        label: "centaur",
+        rect: { left: 213, bottom: -16, width: 76, height: 120 },
+        walkTo: { left: 226, bottom: -15 },
       },
     },
     exits: {
@@ -145,10 +164,12 @@ const scenes = {
     name: "The Java God",
     background: "images/scenes/Breakroom.png",
     walkMessage: "You stand in front of the coffee machine. If only you knew how to operate it",
+    playerScale: 6,
+    playerBottomOffset: -70,
     playerSpawn: { left: 152, bottom: 15 },
     playerBounds: {
-      minLeft: 120,
-      maxLeft: 130,
+      minLeft: 100,
+      maxLeft: 200,
       fixedBottom: 15,
     },
     hotspots: { },
@@ -156,10 +177,20 @@ const scenes = {
       left: {
         edge: "left",
         destinationSceneId: "southCorridor",
-        destinationSpawn: { left: 286, bottom: 15 },
+        destinationSpawn: { left: 170, bottom: 15 },
         walkTo: { left: 10, bottom: 15 },
         triggerWidth: 12,
-        message: "You go back towards the lobby",
+        hoverText: "Give up",
+        message: "You mosey on towards the balcony.",
+      },
+      right: {
+        edge: "right",
+        destinationSceneId: "eastCorridor",
+        destinationSpawn: { left: 250, bottom: 20 },
+        walkTo: { left: 300, bottom: 15 },
+        triggerWidth: 50,
+        hoverText: "Give in",
+        message: "You go back towards the lobby.",
       },
     },
   },
@@ -201,6 +232,8 @@ const scenes = {
         triggerWidth: 24,
         hoverText: "The inner sanctum",
         message: "You walk past Peter.",
+        requiredInventoryItem: "Access Badge",
+        blockedMessage: "You need an Access Badge",
       },
     },
   },
@@ -219,10 +252,10 @@ const scenes = {
     hotspots: {    },
     exits: {
       coffeeRoom: {
-        rect: { left: 220, bottom: 75, width: 30, height: 75 },
+        rect: { left: 95, bottom: 50, width: 55, height: 75 },
         destinationSceneId: "coffeeRoom",
-        destinationSpawn: { left: 12, bottom: 20 },
-        walkTo: { left: 10, bottom: 15 },
+        destinationSpawn: { left: 100, bottom: 15 },
+        walkTo: { left: 100, bottom: 15 },
         triggerWidth: 24,
         hoverText: "The Coffee Machine",
         message: "You go to the coffee machine.",
@@ -231,7 +264,7 @@ const scenes = {
         rect: { left: 250, bottom: 75, width: 50, height: 60 },
         destinationSceneId: "jukkaBrosOffice",
         destinationSpawn: { left: 12, bottom: 20 },
-        walkTo: { left: 150, bottom: 100 },
+        walkTo: { left: 280, bottom: 85 },
         triggerWidth: 24,
         hoverText: "JukkaBros' office",
         message: "You enter the domain of JukkaBros",
@@ -239,7 +272,7 @@ const scenes = {
       southCorridor: {
         rect: { left: 300, bottom: 70, width: 20, height: 80 },
         destinationSceneId: "southCorridor",
-        destinationSpawn: { left: 170, bottom: 20 },
+        destinationSpawn: { left: 170, bottom: 15 },
         walkTo: { left: 300, bottom: 70 },
         triggerWidth: 24,
         hoverText: "The South Side Corridor",
@@ -264,8 +297,8 @@ const scenes = {
     playerScale: 3,
     playerSpawn: { left: 152, bottom: 15 },
     playerBounds: {
-      minLeft: 40,
-      maxLeft: 100,
+      minLeft: 130,
+      maxLeft: 185,
       fixedBottom: 15,
     },
     hotspots: {},
@@ -273,7 +306,7 @@ const scenes = {
       balcony: {
         rect: { left: 170, bottom: 80, width: 30, height: 60 },
         destinationSceneId: "balcony",
-        destinationSpawn: { left: 120, bottom: 20 },
+        destinationSpawn: { left: 120, bottom: 22 },
         walkTo: { left: 170, bottom: 80 },
         triggerWidth: 24,
         message: "You towards the balcony.",
@@ -319,7 +352,7 @@ const scenes = {
     playerBounds: {
       minLeft: 10,
       maxLeft: 298,
-      fixedBottom: 15,
+      fixedBottom: 20,
     },
     hotspots: {
     },
@@ -327,9 +360,10 @@ const scenes = {
       eastCorridor: {
         edge: "right",
         destinationSceneId: "eastCorridor",
-        destinationSpawn: { left: 12, bottom: 20 },
-        walkTo: { left: 100, bottom: 15 },
+        destinationSpawn: { left: 250, bottom: 20 },
+        walkTo: { left: 250, bottom: 20 },
         triggerWidth: 24,
+        hoverText: "Towards the lobby",
         message: "You walk back towards the lobby.",
       },
     }
@@ -397,9 +431,9 @@ const scenes = {
     playerScale: 2,
     playerSpawn: { left: 152, bottom: 15 },
     playerBounds: {
-      minLeft: 10,
-      maxLeft: 298,
-      fixedBottom: 15,
+      minLeft: 115,
+      maxLeft: 185,
+      fixedBottom: 22,
     },
     hotspots: {
     },
@@ -407,7 +441,7 @@ const scenes = {
       southCorridor: {
         rect: { left: 180, bottom: 30, width: 30, height: 70 },
         destinationSceneId: "southCorridor",
-        destinationSpawn: { left: 170, bottom: 20 },
+        destinationSpawn: { left: 170, bottom: 15 },
         walkTo: { left: 190, bottom: 30 },
         triggerWidth: 24,
         hoverText: "Inside",
@@ -495,7 +529,7 @@ const targets = {
       talk() {
         if (state.flags.duckCollected) {
           state.flags.mentorHintUnlocked = true;
-          setMessage("Tewo says: Debug the kiosk with the duck.");
+          setMessage("Tewo says: Debug the centaur with the duck.");
           return;
         }
 
@@ -517,19 +551,19 @@ const targets = {
       },
     },
   },
-  kiosk: {
-    name: "kiosk terminal",
+  centaur: {
+    name: "centaur",
     verbs: {
       walk() {
-        setMessage("You walk to the kiosk terminal.");
+        setMessage("You walk to the centaur.");
       },
       look() {
-        if (state.flags.kioskFixed) {
+        if (state.flags.centaurFixed) {
           setMessage("The screen says: BUILD PASSED.");
           return;
         }
 
-        setMessage("A broken campus kiosk terminal.");
+        setMessage("A broken campus centaur.");
       },
       talk() {
         setMessage("The terminal refuses conversation.");
@@ -539,7 +573,7 @@ const targets = {
       },
       use() {
         if (!state.selectedInventory) {
-          setMessage("Use what with the kiosk terminal?");
+          setMessage("Use what with the centaur?");
           return;
         }
 
@@ -553,11 +587,11 @@ const targets = {
           return;
         }
 
-        setMessage(`That does not help the kiosk.`);
+        setMessage(`That does not help the centaur.`);
       },
       debug() {
-        if (state.flags.kioskFixed) {
-          setMessage("The kiosk is already fixed.");
+        if (state.flags.centaurFixed) {
+          setMessage("The centaur is already fixed.");
           return;
         }
 
@@ -571,9 +605,9 @@ const targets = {
           return;
         }
 
-        state.flags.kioskFixed = true;
+        state.flags.centaurFixed = true;
         addInventoryItem("Access Badge");
-        setMessage("The kiosk is fixed. It spits out an Access Badge.");
+        setMessage("The centaur is fixed. It spits out an Access Badge.");
       },
     },
   },
@@ -641,7 +675,7 @@ const targets = {
         setMessage("Peter looks at you, wondering");
       },
       talk() {
-        if (state.flags.kioskFixed) {
+        if (state.flags.centaurFixed) {
           setMessage("Peter says: Oh, hi! Come on in.");
           return;
         }
@@ -766,18 +800,23 @@ sceneEl.addEventListener("click", (event) => {
 });
 
 sceneEl.addEventListener("mousemove", (event) => {
+  state.devHelpPoint = getScenePoint(event);
+  renderDevHelpOverlay();
+
   if (event.target.closest(".hotspot")) {
     state.hoverExitText = "";
     return;
   }
 
-  const exit = getSceneExitAtPoint(getScenePoint(event));
+  const exit = getSceneExitAtPoint(state.devHelpPoint);
   state.hoverExitText = exit?.hoverText ?? "";
   renderActionLine();
 });
 
 sceneEl.addEventListener("mouseleave", () => {
   state.hoverExitText = "";
+  state.devHelpPoint = null;
+  renderDevHelpOverlay();
   renderActionLine();
 });
 
@@ -806,6 +845,21 @@ function selectVerb(verb) {
   renderActionLine();
 }
 
+function handleDeveloperKeydown(event) {
+  if (event.key !== "F3" || !introCompleted) {
+    return;
+  }
+
+  event.preventDefault();
+  state.devHelpMode = !state.devHelpMode;
+
+  if (!state.devHelpMode) {
+    state.devHelpPoint = null;
+  }
+
+  renderDevHelpOverlay();
+}
+
 function interactWithTarget(key) {
   const hotspot = getCurrentScene().hotspots[key];
 
@@ -817,6 +871,11 @@ function interactWithTarget(key) {
 }
 
 function renderActionLine() {
+  if (state.message) {
+    actionLineEl.textContent = state.message;
+    return;
+  }
+
   if (state.hoverTarget) {
     actionLineEl.textContent = buildCommandText(state.hoverTarget);
     return;
@@ -827,12 +886,23 @@ function renderActionLine() {
     return;
   }
 
-  if (state.message) {
-    actionLineEl.textContent = state.message;
+  actionLineEl.textContent = buildCommandText();
+}
+
+function renderDevHelpOverlay() {
+  if (!devHelpOverlayEl) {
     return;
   }
 
-  actionLineEl.textContent = buildCommandText();
+  const point = state.devHelpPoint;
+
+  if (!state.devHelpMode || !point) {
+    devHelpOverlayEl.hidden = true;
+    return;
+  }
+
+  devHelpOverlayEl.hidden = false;
+  devHelpOverlayEl.textContent = `x: ${Math.round(point.left)}  y: ${Math.round(point.bottom)}`;
 }
 
 function buildCommandText(targetName = "") {
@@ -941,6 +1011,8 @@ function renderScene() {
   if (scene.id === "aula") {
     peterPopsUp();
   }
+
+  renderDevHelpOverlay();
 }
 
 function movePlayer(position) {
@@ -1063,6 +1135,12 @@ function queueInteraction(key, position, verb, inventoryItem) {
 }
 
 function queueSceneExit(exit) {
+  if (exit.requiredInventoryItem && !hasInventoryItem(exit.requiredInventoryItem)) {
+    setMessage(exit.blockedMessage ?? `You need a ${exit.requiredInventoryItem}`);
+    renderActionLine();
+    return;
+  }
+
   const isAlreadyThere = state.playerPosition.left === exit.walkTo.left && state.playerPosition.bottom === exit.walkTo.bottom;
   const duration = movePlayer(exit.walkTo);
 
@@ -1106,7 +1184,7 @@ function clearPendingInteraction() {
 }
 
 function startIntroSequence() {
-  if (introSequenceStarted || !introOverlayEl || !introTextEl) {
+  if (introSequenceStarted || !introOverlayEl || !introTextEl || !introActivated) {
     return;
   }
 
@@ -1116,11 +1194,11 @@ function startIntroSequence() {
 }
 
 function handleIntroAudioReady() {
-  if (!introAudioEl || introCompleted) {
+  if (!introAudioEl || introCompleted || !introActivated) {
     return;
   }
 
-  startIntroSequence();
+  logIntroAudioState("audio-ready");
 }
 
 function handleIntroAudioError() {
@@ -1128,7 +1206,7 @@ function handleIntroAudioError() {
     introAudioEl.muted = false;
   }
 
-  startIntroSequence();
+  logIntroAudioState("audio-error");
 }
 
 function startIntroAudioPlayback() {
@@ -1137,34 +1215,30 @@ function startIntroAudioPlayback() {
   }
 
   introAudioEl.volume = 1;
-  introAudioEl.muted = true;
+  introAudioEl.muted = false;
+  logIntroAudioState("audio-play-attempt-unmuted");
 
   const audioPlayPromise = introAudioEl.play();
   if (audioPlayPromise?.catch) {
     audioPlayPromise.catch(() => {
-      // If autoplay is blocked, the one-time input fallback will try again.
+      // Playback is started from a user gesture; log if Edge still blocks it.
+      logIntroAudioState("audio-play-rejected");
     });
   }
 }
 
-function handleIntroAudioUnmuteOnMove() {
-  if (!introAudioEl || introCompleted || !introVisualsVisible || introAudioUnmuted) {
+function logIntroAudioState(label) {
+  if (!introAudioEl) {
     return;
   }
 
-  introAudioEl.muted = false;
-  introAudioEl.volume = 1;
-  introAudioUnmuted = true;
-
-  document.removeEventListener("pointermove", handleIntroAudioUnmuteOnMove, true);
-  document.removeEventListener("mousemove", handleIntroAudioUnmuteOnMove, true);
-
-  const audioPlayPromise = introAudioEl.play();
-  if (audioPlayPromise?.catch) {
-    audioPlayPromise.catch(() => {
-      // Ignore; muted autoplay may still need a stronger user gesture.
-    });
-  }
+  console.log(`[intro-audio] ${label}`, {
+    muted: introAudioEl.muted,
+    paused: introAudioEl.paused,
+    readyState: introAudioEl.readyState,
+    currentTime: introAudioEl.currentTime,
+    volume: introAudioEl.volume,
+  });
 }
 
 function startIntroPreludeSequence(stageIndex) {
@@ -1184,6 +1258,10 @@ function startIntroPreludeSequence(stageIndex) {
 
   introVisualsVisible = true;
   introPreludeEl.src = stageSrc;
+
+  if (stageIndex === 1) {
+    startIntroAudioPlayback();
+  }
 
   window.requestAnimationFrame(() => {
     introPreludeEl.classList.add("is-visible");
@@ -1232,7 +1310,7 @@ function startMainIntroSequence() {
     introPreludeTimer = null;
   }
 
-  let delay = 600;
+  let delay = 1100;
 
   introLines.forEach((lineText, index) => {
     introTimers.push(window.setTimeout(() => {
@@ -1257,7 +1335,7 @@ function startMainIntroSequence() {
 }
 
 function handleIntroAdvance() {
-  if (introCompleted) {
+  if (introCompleted || !introActivated) {
     return;
   }
 
@@ -1270,11 +1348,28 @@ function handleIntroKeydown(event) {
   }
 
   event.preventDefault();
-  if (introCompleted) {
+  if (introCompleted || !introActivated) {
     return;
   }
 
   finishIntro();
+}
+
+function handleIntroStartButtonClick(event) {
+  event.stopPropagation();
+
+  if (introActivated) {
+    return;
+  }
+
+  introActivated = true;
+
+  if (introStartButtonEl) {
+    introStartButtonEl.classList.add("is-hidden");
+  }
+
+  startGameAudioPlayback();
+  startIntroSequence();
 }
 
 function finishIntro() {
@@ -1285,13 +1380,34 @@ function finishIntro() {
   introCompleted = true;
   introVisualsVisible = false;
   clearIntroTimers();
+  logIntroAudioState("audio-finish");
+  if (introAudioEl) {
+    introAudioEl.pause();
+    introAudioEl.currentTime = 0;
+  }
+
+  if (gameAudioEl) {
+    gameAudioEl.currentTime = 0;
+    gameAudioEl.muted = false;
+    const gamePlayPromise = gameAudioEl.play();
+    if (gamePlayPromise?.catch) {
+      gamePlayPromise.catch(() => {
+        console.log("[game-audio] play rejected", {
+          muted: gameAudioEl.muted,
+          paused: gameAudioEl.paused,
+          readyState: gameAudioEl.readyState,
+          currentTime: gameAudioEl.currentTime,
+          volume: gameAudioEl.volume,
+        });
+      });
+    }
+  }
+
   introOverlayEl.removeEventListener("pointerdown", handleIntroAdvance);
   introOverlayEl.removeEventListener("click", handleIntroAdvance);
   introOverlayEl.removeEventListener("keydown", handleIntroKeydown);
   document.removeEventListener("pointerdown", handleIntroAdvance, true);
   document.removeEventListener("keydown", handleIntroKeydown, true);
-  document.removeEventListener("pointermove", handleIntroAudioUnmuteOnMove, true);
-  document.removeEventListener("mousemove", handleIntroAudioUnmuteOnMove, true);
   document.body.classList.remove("is-intro-active");
   document.body.classList.remove("is-intro-exiting");
   introOverlayEl.remove();
@@ -1314,6 +1430,27 @@ function clearIntroTimers() {
   }
 }
 
+function startGameAudioPlayback() {
+  if (!gameAudioEl || introCompleted) {
+    return;
+  }
+
+  gameAudioEl.muted = true;
+  gameAudioEl.volume = 0.35;
+
+  const gamePlayPromise = gameAudioEl.play();
+  if (gamePlayPromise?.catch) {
+    gamePlayPromise.catch(() => {
+      console.log("[game-audio] play rejected", {
+        muted: gameAudioEl.muted,
+        paused: gameAudioEl.paused,
+        readyState: gameAudioEl.readyState,
+        currentTime: gameAudioEl.currentTime,
+        volume: gameAudioEl.volume,
+      });
+    });
+  }
+}
 function peterPopsUp() {
   let y = 45;
   
