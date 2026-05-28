@@ -259,7 +259,7 @@ const scenes = {
         rect: { left: 250, bottom: 75, width: 50, height: 60 },
         destinationSceneId: "jukkaBrosOffice",
         destinationSpawn: { left: 12, bottom: 20 },
-        walkTo: { left: 150, bottom: 100 },
+        walkTo: { left: 280, bottom: 85 },
         triggerWidth: 24,
         hoverText: "JukkaBros' office",
         message: "You enter the domain of JukkaBros",
@@ -345,7 +345,7 @@ const scenes = {
     playerBounds: {
       minLeft: 10,
       maxLeft: 298,
-      fixedBottom: 15,
+      fixedBottom: 20,
     },
     hotspots: {
     },
