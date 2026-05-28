@@ -7,7 +7,11 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="is-intro-active">
+  <audio id="intro-audio" src="sound/borrowedSoundTrack.mp3" preload="auto" autoplay muted playsinline aria-hidden="true"></audio>
   <div id="intro-overlay" class="intro-overlay" role="button" tabindex="0" aria-label="Start the game">
+    <img id="intro-prelude" class="intro-prelude" src="images/wapiceLogo.png" alt="" aria-hidden="true">
+    <img id="intro-main-scene" class="intro-main-scene" src="images/SecretOfFireIsland_IntroWithoutTitle.png" alt="" aria-hidden="true">
+    <img class="intro-title" src="images/Title1.png" alt="" aria-hidden="true">
     <div class="intro-copy" aria-live="polite">
       <span id="intro-text" class="intro-line"></span>
     </div>

@@ -1,5 +1,9 @@
 const sceneEl = document.getElementById("scene");
 const sceneBackgroundEl = document.querySelector(".scene-background");
+const introAudioEl = document.getElementById("intro-audio");
+const introPreludeEl = document.getElementById("intro-prelude");
+const introMainSceneEl = document.getElementById("intro-main-scene");
+const introTitleEl = document.querySelector(".intro-title");
 const playerEl = document.getElementById("player");
 const actionLineEl = document.getElementById("action-line");
 const inventoryListEl = document.getElementById("inventory-list");
@@ -12,8 +16,34 @@ const SCENE_NATIVE_WIDTH = 320;
 const SCENE_NATIVE_HEIGHT = 144;
 let pendingInteractionTimer = null;
 let introCompleted = false;
+let introSequenceStarted = false;
+let introVisualsVisible = false;
+let introAudioUnmuted = false;
+let introPreludeTimer = null;
 let introTimers = [];
 let introExitTimer = null;
+
+if (introOverlayEl) {
+  document.body.classList.add("is-intro-active");
+  introOverlayEl.addEventListener("click", handleIntroAdvance);
+  introOverlayEl.addEventListener("keydown", handleIntroKeydown);
+  document.addEventListener("pointerdown", handleIntroAdvance, true);
+  document.addEventListener("keydown", handleIntroKeydown, true);
+}
+
+if (introAudioEl) {
+  introAudioEl.volume = 1;
+  introAudioEl.muted = true;
+  introAudioEl.addEventListener("loadeddata", handleIntroAudioReady);
+  introAudioEl.addEventListener("canplaythrough", handleIntroAudioReady);
+  introAudioEl.addEventListener("error", handleIntroAudioError);
+  document.addEventListener("pointerdown", startIntroAudioPlayback, { once: true, capture: true });
+  document.addEventListener("keydown", startIntroAudioPlayback, { once: true, capture: true });
+  document.addEventListener("pointermove", handleIntroAudioUnmuteOnMove, { capture: true });
+  document.addEventListener("mousemove", handleIntroAudioUnmuteOnMove, { capture: true });
+
+  startIntroAudioPlayback();
+}
 
 const verbLabels = {
   walk: "Walk to",
@@ -26,10 +56,18 @@ const verbLabels = {
 
 const introLineVisibleDuration = 6000;
 const introLineGapDuration = 1500;
+const introPreludeDuration = 6000;
+const introPreludeFadeDuration = 500;
+const introTitleLineIndex = 3;
+const introPreludeStages = [
+  "images/wapiceLogo.png",
+  "images/leapoffateproductions.png",
+];
 const introLines = [
   "Deep in the Quark",
   "The Island of Fire",
-  "TM & (c) 2026 Wapice Leap Of Fate Productions",
+  "Wapice - Leap Of Fate Productions",
+  "TM (c) 2026 All Rights Reserved",
   "Created and Designed by Johan, Johan and Tomas",
 ];
 
@@ -658,7 +696,12 @@ renderInventory();
 renderScene();
 renderActionLine();
 updateGameScale();
-startIntroSequence();
+
+if (!introAudioEl) {
+  startIntroSequence();
+} else if (introAudioEl.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+  handleIntroAudioReady();
+}
 
 window.addEventListener("resize", updateGameScale);
 
@@ -970,21 +1013,142 @@ function clearPendingInteraction() {
 }
 
 function startIntroSequence() {
-  if (!introOverlayEl || !introTextEl) {
+  if (introSequenceStarted || !introOverlayEl || !introTextEl) {
     return;
   }
 
-  introOverlayEl.addEventListener("pointerdown", handleIntroAdvance);
-  introOverlayEl.addEventListener("click", handleIntroAdvance);
-  document.addEventListener("pointerdown", handleIntroAdvance, true);
-  document.addEventListener("keydown", handleIntroKeydown, true);
+  introSequenceStarted = true;
+
+  startIntroPreludeSequence(0);
+}
+
+function handleIntroAudioReady() {
+  if (!introAudioEl || introCompleted) {
+    return;
+  }
+
+  startIntroSequence();
+}
+
+function handleIntroAudioError() {
+  if (introAudioEl) {
+    introAudioEl.muted = false;
+  }
+
+  startIntroSequence();
+}
+
+function startIntroAudioPlayback() {
+  if (!introAudioEl || introCompleted) {
+    return;
+  }
+
+  introAudioEl.volume = 1;
+  introAudioEl.muted = true;
+
+  const audioPlayPromise = introAudioEl.play();
+  if (audioPlayPromise?.catch) {
+    audioPlayPromise.catch(() => {
+      // If autoplay is blocked, the one-time input fallback will try again.
+    });
+  }
+}
+
+function handleIntroAudioUnmuteOnMove() {
+  if (!introAudioEl || introCompleted || !introVisualsVisible || introAudioUnmuted) {
+    return;
+  }
+
+  introAudioEl.muted = false;
+  introAudioEl.volume = 1;
+  introAudioUnmuted = true;
+
+  document.removeEventListener("pointermove", handleIntroAudioUnmuteOnMove, true);
+  document.removeEventListener("mousemove", handleIntroAudioUnmuteOnMove, true);
+
+  const audioPlayPromise = introAudioEl.play();
+  if (audioPlayPromise?.catch) {
+    audioPlayPromise.catch(() => {
+      // Ignore; muted autoplay may still need a stronger user gesture.
+    });
+  }
+}
+
+function startIntroPreludeSequence(stageIndex) {
+  if (!introPreludeEl) {
+    startMainIntroSequence();
+    return;
+  }
+
+  const stageSrc = introPreludeStages[stageIndex];
+
+  if (!stageSrc) {
+    fadeOutPrelude(() => {
+      startMainIntroSequence();
+    });
+    return;
+  }
+
+  introVisualsVisible = true;
+  introPreludeEl.src = stageSrc;
+
+  window.requestAnimationFrame(() => {
+    introPreludeEl.classList.add("is-visible");
+  });
+
+  introPreludeTimer = window.setTimeout(() => {
+    introPreludeEl.classList.remove("is-visible");
+    introPreludeTimer = window.setTimeout(() => {
+      startIntroPreludeSequence(stageIndex + 1);
+    }, introPreludeFadeDuration);
+  }, introPreludeDuration - introPreludeFadeDuration);
+}
+
+function fadeOutPrelude(callback) {
+  if (!introPreludeEl) {
+    callback();
+    return;
+  }
+
+  introPreludeEl.classList.remove("is-visible");
+
+  introPreludeTimer = window.setTimeout(() => {
+    callback();
+  }, introPreludeFadeDuration);
+}
+
+function startMainIntroSequence() {
+  if (!introTextEl) {
+    return;
+  }
+
+  introVisualsVisible = true;
+
+  if (introPreludeEl) {
+    introPreludeEl.classList.remove("is-visible");
+  }
+
+  if (introMainSceneEl) {
+    window.requestAnimationFrame(() => {
+      introMainSceneEl.classList.add("is-visible");
+    });
+  }
+
+  if (introPreludeTimer !== null) {
+    window.clearTimeout(introPreludeTimer);
+    introPreludeTimer = null;
+  }
 
   let delay = 600;
 
-  introLines.forEach((lineText) => {
+  introLines.forEach((lineText, index) => {
     introTimers.push(window.setTimeout(() => {
       introTextEl.textContent = lineText;
       introTextEl.classList.add("is-visible");
+
+      if (introTitleEl && index === introTitleLineIndex) {
+        introTitleEl.classList.add("is-visible");
+      }
     }, delay));
 
     introTimers.push(window.setTimeout(() => {
@@ -1026,15 +1190,26 @@ function finishIntro() {
   }
 
   introCompleted = true;
+  introVisualsVisible = false;
   clearIntroTimers();
   introOverlayEl.removeEventListener("pointerdown", handleIntroAdvance);
   introOverlayEl.removeEventListener("click", handleIntroAdvance);
+  introOverlayEl.removeEventListener("keydown", handleIntroKeydown);
   document.removeEventListener("pointerdown", handleIntroAdvance, true);
   document.removeEventListener("keydown", handleIntroKeydown, true);
+  document.removeEventListener("pointermove", handleIntroAudioUnmuteOnMove, true);
+  document.removeEventListener("mousemove", handleIntroAudioUnmuteOnMove, true);
+  document.body.classList.remove("is-intro-active");
+  document.body.classList.remove("is-intro-exiting");
   introOverlayEl.remove();
 }
 
 function clearIntroTimers() {
+  if (introPreludeTimer !== null) {
+    window.clearTimeout(introPreludeTimer);
+    introPreludeTimer = null;
+  }
+
   introTimers.forEach((timerId) => {
     window.clearTimeout(timerId);
   });
