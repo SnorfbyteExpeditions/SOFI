@@ -92,11 +92,12 @@ const scenes = {
     name: "Lobby",
     background: "images/HqLobby.png",
     walkMessage: "You walk across the street, trying to look like you totally belong in this codebase.",
-    playerSpawn: { left: 152, bottom: 15 },
+    playerScale: 3,
+    playerSpawn: { left: 152, bottom: 10 },
     playerBounds: {
       minLeft: 10,
       maxLeft: 298,
-      fixedBottom: 15,
+      fixedBottom: 10,
     },
     hotspots: {
       peter: {
@@ -107,7 +108,7 @@ const scenes = {
       },
     },
     exits: {
-      left: {
+      outside: {
         edge: "left",
         destinationSceneId: "campusExterior",
         destinationSpawn: { left: 12, bottom: 20 },
@@ -115,7 +116,180 @@ const scenes = {
         triggerWidth: 24,
         message: "You go back outside.",
       },
+      pastPeter: {
+        edge: "right",
+        destinationSceneId: "eastCorridor",
+        destinationSpawn: { left: 250, bottom: 20 },
+        walkTo: { left: 200, bottom: 15 },
+        triggerWidth: 24,
+        message: "You walk past Peter.",
+      },
     },
+  },
+  eastCorridor: {
+    id: "eastCorridor",
+    name: "Ominous Corridor",
+    background: "images/HqCoffeeroom.png",
+    walkMessage: "You walk past Peter and find yourself at a junction",
+    playerScale: 2,
+    playerSpawn: { left: 152, bottom: 15 },
+    playerBounds: {
+      minLeft: 10,
+      maxLeft: 298,
+      fixedBottom: 15,
+    },
+    hotspots: {    },
+    exits: {
+      coffeeMachine: {
+        rect: { left: 220, bottom: 75, width: 30, height: 75 },
+        destinationSceneId: "coffeeMachine",
+        destinationSpawn: { left: 12, bottom: 20 },
+        walkTo: { left: 10, bottom: 15 },
+        triggerWidth: 24,
+        hoverText: "The Coffee Machine",
+        message: "You go to the coffee machine.",
+      },
+      jukkabrosRoom: {
+        rect: { left: 250, bottom: 75, width: 50, height: 60 },
+        destinationSceneId: "jukkaBrosOffice",
+        destinationSpawn: { left: 12, bottom: 20 },
+        walkTo: { left: 150, bottom: 100 },
+        triggerWidth: 24,
+        hoverText: "JukkaBros' office",
+        message: "You enter the domain of JukkaBros",
+      },
+      southCorridor: {
+        rect: { left: 300, bottom: 100, width: 20, height: 50 },
+        destinationSceneId: "southCorridor",
+        destinationSpawn: { left: 100, bottom: 20 },
+        walkTo: { left: 170, bottom: 70 },
+        triggerWidth: 24,
+        hoverText: "The South Side Corridor",
+        message: "You go towards the south corridor.",
+      },
+    },
+  },
+  southCorridor: {
+    id: "southCorridor",
+    name: "Corridor with lots of doors",
+    background: "images/HqSouthCorridor.png",
+    walkMessage: "You walk along this ominous corridor",
+    playerScale: 3,
+    playerSpawn: { left: 152, bottom: 15 },
+    playerBounds: {
+      minLeft: 40,
+      maxLeft: 100,
+      fixedBottom: 15,
+    },
+    hotspots: {
+      // peter: {
+      //   target: "peter",
+      //   label: "Peter the Code Guardian",
+      //   rect: { left: 195, bottom: 92, width: 20, height: 20 },
+      //   walkTo: { left: 20, bottom: 15 },
+      // },
+    },
+    exits: {
+      balcony: {
+        rect: { left: 170, bottom: 80, width: 30, height: 60 },
+        destinationSceneId: "balcony",
+        destinationSpawn: { left: 100, bottom: 30 },
+        walkTo: { left: 70, bottom: 100 },
+        triggerWidth: 24,
+        message: "You towards the balcony.",
+        hoverText: "The Wapice HQ Balcony(tm)",
+      },
+      jukkabrosRoom: {
+        edge: "left",
+        destinationSceneId: "jukkaBrosOffice",
+        destinationSpawn: { left: 12, bottom: 20 },
+        walkTo: { left: 150, bottom: 100 },
+        triggerWidth: 24,
+        hoverText: "JukkaBros' office",
+        message: "You enter the domain of JukkaBros",
+      },
+      eastCorridor: {
+        edge: "right",
+        destinationSceneId: "eastCorridor",
+        destinationSpawn: { left: 250, bottom: 20 },
+        walkTo: { left: 60, bottom: 15 },
+        triggerWidth: 24,
+        hoverText: "Towards the lobby",
+        message: "You walk back towards the lobby.",
+      },
+    },
+  },
+  jukkaBrosOffice: {
+    id: "jukkaBrosOffice",
+    name: "Bow before the Steward of Wapice",
+    background: "images/HqJukkaBrosOffice.png",
+    walkMessage: "You walk in awe before the mighty JukkaBros",
+    playerScale: 4,
+    playerSpawn: { left: 152, bottom: 15 },
+    playerBounds: {
+      minLeft: 10,
+      maxLeft: 298,
+      fixedBottom: 15,
+    },
+    hotspots: {
+    },
+    exits: {
+      eastCorridor: {
+        edge: "right",
+        destinationSceneId: "eastCorridor",
+        destinationSpawn: { left: 12, bottom: 20 },
+        walkTo: { left: 100, bottom: 15 },
+        triggerWidth: 24,
+        message: "You walk back towards the lobby.",
+      },
+    }
+  },
+  officeLandscape: {
+    id: "officeLandscape",
+    name: "An empty office landscape",
+    background: "images/HqOfficeLandscape.png",
+    walkMessage: "You walk along this ominous corridor",
+    playerSpawn: { left: 152, bottom: 15 },
+    playerBounds: {
+      minLeft: 10,
+      maxLeft: 298,
+      fixedBottom: 15,
+    },
+    hotspots: {},
+    exits: {
+      balcony: {
+        edge: "left",
+        destinationSceneId: "balcony",
+        destinationSpawn: { left: 12, bottom: 20 },
+        walkTo: { left: 10, bottom: 15 },
+        triggerWidth: 24,
+        message: "You walk around on the balcony.",
+      },
+      },
+  },
+  balcony: {
+    id: "balcony",
+    name: "The Awesome Wapice HQ Balcony(tm)",
+    background: "images/balconyAnimation.gif",
+    walkMessage: "You walk and look at the amazing views",
+    playerSpawn: { left: 152, bottom: 15 },
+    playerBounds: {
+      minLeft: 10,
+      maxLeft: 298,
+      fixedBottom: 15,
+    },
+    hotspots: {
+    },
+    exits: {
+      eastCorridor: {
+        edge: "bottom",
+        destinationSceneId: "eastCorridor",
+        destinationSpawn: { left: 12, bottom: 20 },
+        walkTo: { left: 100, bottom: 15 },
+        triggerWidth: 24,
+        message: "You walk back towards the lobby.",
+      },
+    }
   },
   sauna: {
     id: "sauna",
@@ -343,11 +517,10 @@ const targets = {
         setMessage("Peter looks at you, wondering");
       },
       talk() {
-        // if (state.flags.duckCollected) {
-        //   state.flags.mentorHintUnlocked = true;
-        //   setMessage("Tewo says: Debug the kiosk with the duck.");
-        //   return;
-        // }
+        if (state.flags.kioskFixed) {
+          setMessage("Peter says: Oh, hi! Come on in.");
+          return;
+        }
 
         setMessage("Peter says: Do you have an appointment?");
       },
