@@ -282,13 +282,14 @@ body.is-intro-exiting .intro-overlay {
   height: 30px;
 }
 
-.sprite-mentor {
-  position: absolute;
-  left: 0;
-  bottom: 0;
+.hotspot-anssi {
+  left: 120px;
+  bottom: 20px;
+  width: 12px;
+  height: 40px;
 }
 
-.sprite-peter {
+.sprite-npc {
   position: absolute;
   left: 0;
   bottom: 0;
@@ -340,38 +341,6 @@ body.is-intro-exiting .intro-overlay {
   transform-origin: bottom center;
   transition: left var(--walk-duration, 600ms) steps(4), bottom var(--walk-duration, 600ms) steps(4);
   pointer-events: none;
-}
-
-.player-head,
-.player-body {
-  position: absolute;
-  display: block;
-}
-
-.player-head {
-  top: 0;
-  left: 2px;
-  width: 8px;
-  height: 8px;
-  background: #f0c191;
-}
-
-.player-body {
-  top: 8px;
-  left: 1px;
-  width: 10px;
-  height: 20px;
-  background: linear-gradient(180deg, #f1efe8 0 4px, #6f3039 4px 10px, #2538a4 10px 100%);
-}
-
-.player-body::before,
-.player-body::after {
-  content: "";
-  position: absolute;
-  bottom: -6px;
-  width: 3px;
-  height: 6px;
-  background: #1a1d4a;
 }
 
 .player-body::before {
