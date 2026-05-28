@@ -122,7 +122,7 @@ const scenes = {
     hotspots: {
       mentor: {
         target: "mentor",
-        label: "Tewo",
+        label: "Petri",
         rect: { left: 24, bottom: 8, width: 12, height: 36 },
         walkTo: { left: 27, bottom: 15 },
       },
@@ -541,33 +541,33 @@ state.playerPosition = { ...scenes[state.currentSceneId].playerSpawn };
 
 const targets = {
   mentor: {
-    name: "Tewo",
+    name: "Petri",
     verbs: {
       walk() {
-        setMessage("You walk over to Tewo.");
+        setMessage("You walk over to Petri.");
       },
       look() {
-        setMessage("Tewo looks highly employable.");
+        setMessage("Petri looks highly employable.");
       },
       talk() {
         if (state.flags.duckCollected) {
           state.flags.mentorHintUnlocked = true;
-          setMessage("Tewo says: Debug the centaur with the duck.");
+          setMessage("Petri says: Debug the centaur with the duck.");
           return;
         }
 
-        setMessage("Tewo says: Find a rubber duck first.");
+        setMessage("Petri says: Find a rubber duck first.");
       },
       pickup() {
         setMessage("Better not pick up your mentor.");
       },
       use() {
         if (state.selectedInventory) {
-          setMessage(`Using ${state.selectedInventory} on Tewo feels wrong.`);
+          setMessage(`Using ${state.selectedInventory} on Petri feels wrong.`);
           return;
         }
 
-        setMessage("Use what on Tewo?");
+        setMessage("Use what on Petri?");
       },
       debug() {
         setMessage("No bugs found. Only sarcasm.");
@@ -601,7 +601,7 @@ const targets = {
         }
 
         if (state.selectedInventory === "Rubber Duck" && !state.flags.mentorHintUnlocked) {
-          setMessage("Maybe ask Tewo first.");
+          setMessage("Maybe ask Petri first.");
           return;
         }
 
