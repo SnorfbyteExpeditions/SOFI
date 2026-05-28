@@ -305,7 +305,7 @@ const scenes = {
     hotspots: {},
     exits: {
       balcony: {
-        rect: { left: 170, bottom: 80, width: 30, height: 60 },
+        rect: { left: 160, bottom: 80, width: 20, height: 35 },
         destinationSceneId: "balcony",
         destinationSpawn: { left: 120, bottom: 22 },
         walkTo: { left: 170, bottom: 80 },
