@@ -427,10 +427,10 @@ const scenes = {
       balcony: {
         edge: "left",
         destinationSceneId: "balcony",
-        destinationSpawn: { left: 12, bottom: 20 },
-        walkTo: { left: 10, bottom: 15 },
+        destinationSpawn: { left: 120, bottom: 22 },
+        walkTo: { left: 0, bottom: 20 },
         triggerWidth: 24,
-        hoverText: "The balcony",
+        hoverText: "The Wapice HQ Balcony™",
         message: "You walk around on the balcony.",
       },
       southCorridor: {
