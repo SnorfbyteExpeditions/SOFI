@@ -370,13 +370,14 @@ const scenes = {
     hotspots: {
     },
     exits: {
-      eastCorridor: {
-        edge: "bottom",
-        destinationSceneId: "eastCorridor",
-        destinationSpawn: { left: 12, bottom: 20 },
-        walkTo: { left: 100, bottom: 15 },
+      southCorridor: {
+        rect: { left: 180, bottom: 30, width: 30, height: 70 },
+        destinationSceneId: "southCorridor",
+        destinationSpawn: { left: 170, bottom: 20 },
+        walkTo: { left: 190, bottom: 30 },
         triggerWidth: 24,
-        message: "You walk back towards the lobby.",
+        hoverText: "Inside",
+        message: "You return to the harsh, cold reality of the office.",
       },
     }
   },
