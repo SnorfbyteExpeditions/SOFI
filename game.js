@@ -280,8 +280,8 @@ const scenes = {
       balcony: {
         rect: { left: 170, bottom: 80, width: 30, height: 60 },
         destinationSceneId: "balcony",
-        destinationSpawn: { left: 100, bottom: 30 },
-        walkTo: { left: 70, bottom: 100 },
+        destinationSpawn: { left: 120, bottom: 20 },
+        walkTo: { left: 170, bottom: 80 },
         triggerWidth: 24,
         message: "You towards the balcony.",
         hoverText: "The Wapice HQ Balcony™",
@@ -360,6 +360,7 @@ const scenes = {
     name: "The Awesome Wapice HQ Balcony™",
     background: "images/scenes/balconyAnimation.gif",
     walkMessage: "You walk and look at the amazing views",
+    playerScale: 2,
     playerSpawn: { left: 152, bottom: 15 },
     playerBounds: {
       minLeft: 10,
