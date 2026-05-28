@@ -6,6 +6,7 @@ const introMainSceneEl = document.getElementById("intro-main-scene");
 const introTitleEl = document.querySelector(".intro-title");
 const playerEl = document.getElementById("player");
 const actionLineEl = document.getElementById("action-line");
+const petersHead = document.getElementById("peters-head");
 const inventoryListEl = document.getElementById("inventory-list");
 const introOverlayEl = document.getElementById("intro-overlay");
 const introTextEl = document.getElementById("intro-text");
@@ -67,7 +68,7 @@ const introLines = [
   "Deep in the Quark",
   "The Island of Fire™",
   "Wapice - Leap Of Fate Productions",
-  "TM (c) 2026 All Rights Reserved",
+  "(c) 2026 All Rights Reserved",
   "Created and Designed by Johan, Johan and Tomas",
 ];
 
@@ -91,7 +92,7 @@ const scenes = {
   campusExterior: {
     id: "campusExterior",
     name: "Code Temple",
-    background: "images/DomusBothnica_pixelated.png",
+    background: "images/scenes/DomusBothnica_pixelated.png",
     walkMessage: "You walk across the street, trying to look like you totally belong in this codebase.",
     playerSpawn: { left: 152, bottom: 15 },
     playerBounds: {
@@ -135,14 +136,37 @@ const scenes = {
         destinationSpawn: { left: 12, bottom: 0 },
         walkTo: { left: 10, bottom: 15 },
         hoverText: "Enter Wapice HQ",
-        message: "You arrive in this temple of code.",
+        message: "You arrive in this temple of code. Peter the Code Guardian hears you looks up from behind his screens. (work in progress, don't judge me!)",
+      },
+    },
+  },
+  coffeeRoom: {
+    id: "coffeeRoom",
+    name: "The Java God",
+    background: "images/scenes/Breakroom.png",
+    walkMessage: "You stand in front of the coffee machine. If only you knew how to operate it",
+    playerSpawn: { left: 152, bottom: 15 },
+    playerBounds: {
+      minLeft: 120,
+      maxLeft: 130,
+      fixedBottom: 15,
+    },
+    hotspots: { },
+    exits: {
+      left: {
+        edge: "left",
+        destinationSceneId: "southCorridor",
+        destinationSpawn: { left: 286, bottom: 15 },
+        walkTo: { left: 10, bottom: 15 },
+        triggerWidth: 12,
+        message: "You go back towards the lobby",
       },
     },
   },
   aula: {
     id: "aula",
     name: "Lobby",
-    background: "images/HqLobby.png",
+    background: "images/scenes/HqLobby.png",
     walkMessage: "You cautiously make your way past the front desk.",
     playerScale: 3,
     playerSpawn: { left: 152, bottom: 10 },
@@ -155,7 +179,7 @@ const scenes = {
       peter: {
         target: "peter",
         label: "Peter the Code Guardian",
-        rect: { left: 195, bottom: 92, width: 20, height: 20 },
+        rect: { left: 195, bottom: SCENE_NATIVE_HEIGHT -92, width: 20, height: 20 },
         walkTo: { left: 20, bottom: 15 },
       },
     },
@@ -183,7 +207,7 @@ const scenes = {
   eastCorridor: {
     id: "eastCorridor",
     name: "Ominous Corridor",
-    background: "images/HqCoffeeroom.png",
+    background: "images/scenes/HqCoffeeroom.png",
     walkMessage: "You walk past Peter and find yourself at a junction",
     playerScale: 2,
     playerSpawn: { left: 152, bottom: 15 },
@@ -194,9 +218,9 @@ const scenes = {
     },
     hotspots: {    },
     exits: {
-      coffeeMachine: {
+      coffeeRoom: {
         rect: { left: 220, bottom: 75, width: 30, height: 75 },
-        destinationSceneId: "coffeeMachine",
+        destinationSceneId: "coffeeRoom",
         destinationSpawn: { left: 12, bottom: 20 },
         walkTo: { left: 10, bottom: 15 },
         triggerWidth: 24,
@@ -235,7 +259,7 @@ const scenes = {
   southCorridor: {
     id: "southCorridor",
     name: "Corridor with lots of doors",
-    background: "images/HqSouthCorridor.png",
+    background: "images/scenes/HqSouthCorridor.png",
     walkMessage: "You walk along this ominous corridor",
     playerScale: 3,
     playerSpawn: { left: 152, bottom: 15 },
@@ -285,9 +309,10 @@ const scenes = {
   jukkaBrosOffice: {
     id: "jukkaBrosOffice",
     name: "Bow before the Steward of Wapice",
-    background: "images/HqJukkaBrosOffice.png",
+    background: "images/scenes/HqJukkaBrosOffice.png",
     walkMessage: "You walk in awe before the mighty JukkaBros",
     playerScale: 4,
+    playerBottomOffset: -45,
     playerSpawn: { left: 152, bottom: 15 },
     playerBounds: {
       minLeft: 10,
@@ -310,7 +335,7 @@ const scenes = {
   officeLandscape: {
     id: "officeLandscape",
     name: "An empty office landscape",
-    background: "images/HqOfficeLandscape.png",
+    background: "images/scenes/HqOfficeLandscape.png",
     walkMessage: "You walk along this ominous corridor",
     playerSpawn: { left: 152, bottom: 15 },
     playerBounds: {
@@ -333,7 +358,7 @@ const scenes = {
   balcony: {
     id: "balcony",
     name: "The Awesome Wapice HQ Balcony™",
-    background: "images/balconyAnimation.gif",
+    background: "images/scenes/balconyAnimation.gif",
     walkMessage: "You walk and look at the amazing views",
     playerScale: 2,
     playerSpawn: { left: 152, bottom: 15 },
@@ -359,7 +384,7 @@ const scenes = {
   sauna: {
     id: "sauna",
     name: "Hotfix Sauna",
-    background: "images/KonttoriSauna.png",
+    background: "images/scenes/KonttoriSauna.png",
     walkMessage: "The distant sound of seagulls mixes with someone debugging in Swedish.",
     playerSpawn: { left: 286, bottom: 15 },
     playerBounds: {
@@ -390,7 +415,7 @@ const scenes = {
   saunaInterior: {
     id: "saunaInterior",
     name: "Sauna Interior",
-    background: "images/saunaInterior.gif",
+    background: "images/scenes/saunaInterior.gif",
     playerScale: 3,
     playerBottomOffset: -45,
     walkMessage: "I can't tell if he's guru meditating... or waiting for a software update.",
@@ -850,6 +875,10 @@ function renderScene() {
   });
 
   movePlayer(state.playerPosition);
+
+  if (scene.id === "aula") {
+    peterPopsUp();
+  }
 }
 
 function movePlayer(position) {
@@ -1221,4 +1250,18 @@ function clearIntroTimers() {
     window.clearTimeout(introExitTimer);
     introExitTimer = null;
   }
+}
+
+function peterPopsUp() {
+  let y = 45;
+  
+  const movePeter = setInterval(() => {
+    y--;
+
+    if (y > 25) {
+      petersHead.style.top = y + "px";
+    } else {
+      clearInterval(movePeter);
+    }
+  }, 250);
 }
