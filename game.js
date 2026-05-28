@@ -237,10 +237,10 @@ const scenes = {
         message: "You enter the domain of JukkaBros",
       },
       southCorridor: {
-        rect: { left: 300, bottom: 100, width: 20, height: 50 },
+        rect: { left: 300, bottom: 70, width: 20, height: 80 },
         destinationSceneId: "southCorridor",
-        destinationSpawn: { left: 100, bottom: 20 },
-        walkTo: { left: 170, bottom: 70 },
+        destinationSpawn: { left: 170, bottom: 20 },
+        walkTo: { left: 300, bottom: 70 },
         triggerWidth: 24,
         hoverText: "The South Side Corridor",
         message: "You go towards the south corridor.",
