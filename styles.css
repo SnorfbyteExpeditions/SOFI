@@ -70,6 +70,39 @@ button {
   outline-offset: -4px;
 }
 
+.intro-start-button {
+  position: relative;
+  z-index: 4;
+  border: 1px solid #5d2a61;
+  background: linear-gradient(180deg, #2c1030 0%, #19051f 100%);
+  color: #cf58c4;
+  font-family: "Silkscreen", "Tiny5", "Courier New", Courier, monospace;
+  font-size: 8px;
+  line-height: 1.1;
+  padding: 10px 14px 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px #8d52a3, 0 0 0 1px #000000;
+  image-rendering: pixelated;
+}
+
+.intro-start-button:hover,
+.intro-start-button:focus-visible {
+  color: #ffd04e;
+  outline: none;
+  border-color: #ffd04e;
+  box-shadow: inset 0 0 0 1px #ffd04e, 0 0 0 1px #000000;
+}
+
+.intro-start-button.is-hidden {
+  display: none;
+}
+
+.intro-start-button.is-hidden + .intro-prelude {
+  pointer-events: none;
+}
+
 .intro-prelude {
   position: absolute;
   inset: 0;
