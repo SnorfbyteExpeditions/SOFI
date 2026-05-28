@@ -6,7 +6,13 @@
   <title>The Secret of Fire Island</title>
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="is-intro-active">
+  <div id="intro-overlay" class="intro-overlay" role="button" tabindex="0" aria-label="Start the game">
+    <div class="intro-copy" aria-live="polite">
+      <span id="intro-text" class="intro-line"></span>
+    </div>
+  </div>
+
   <div class="game-stage">
     <main id="game-window" class="game-window" aria-label="The Secret of Fire Island game window">
       <section id="scene" class="scene" aria-label="Street scene">

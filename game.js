@@ -3,12 +3,21 @@ const sceneBackgroundEl = document.querySelector(".scene-background");
 const playerEl = document.getElementById("player");
 const actionLineEl = document.getElementById("action-line");
 const inventoryListEl = document.getElementById("inventory-list");
+const introOverlayEl = document.getElementById("intro-overlay");
+const introTextEl = document.getElementById("intro-text");
 const verbButtons = Array.from(document.querySelectorAll(".verb"));
 const hotspotButtons = Array.from(document.querySelectorAll(".hotspot"));
 const rootStyle = document.documentElement.style;
 const SCENE_NATIVE_WIDTH = 320;
 const SCENE_NATIVE_HEIGHT = 144;
 let pendingInteractionTimer = null;
+let introCompleted = false;
+let introTimers = [];
+let introExitTimer = null;
+
+if (introOverlayEl) {
+  document.body.classList.add("is-intro-active");
+}
 
 const verbLabels = {
   walk: "Walk to",
@@ -18,6 +27,15 @@ const verbLabels = {
   use: "Use",
   debug: "Debug",
 };
+
+const introLineVisibleDuration = 6000;
+const introLineGapDuration = 1500;
+const introLines = [
+  "Deep in the Quark",
+  "The Island of Fire",
+  "TM & (c) 2026 Wapice Leap Of Fate Productions",
+  "Created and Designed by Johan, Johan and Tomas",
+];
 
 const state = {
   currentSceneId: "campusExterior",
@@ -388,6 +406,7 @@ renderInventory();
 renderScene();
 renderActionLine();
 updateGameScale();
+startIntroSequence();
 
 window.addEventListener("resize", updateGameScale);
 
@@ -696,4 +715,75 @@ function clearPendingInteraction() {
 
   window.clearTimeout(pendingInteractionTimer);
   pendingInteractionTimer = null;
+}
+
+function startIntroSequence() {
+  if (!introOverlayEl || !introTextEl) {
+    return;
+  }
+
+  introOverlayEl.addEventListener("click", handleIntroAdvance);
+  introOverlayEl.addEventListener("keydown", handleIntroKeydown);
+
+  let delay = 600;
+
+  introLines.forEach((lineText) => {
+    introTimers.push(window.setTimeout(() => {
+      introTextEl.textContent = lineText;
+      introTextEl.classList.add("is-visible");
+    }, delay));
+
+    introTimers.push(window.setTimeout(() => {
+      introTextEl.classList.remove("is-visible");
+    }, delay + introLineVisibleDuration));
+
+    delay += introLineVisibleDuration + introLineGapDuration;
+  });
+
+  introExitTimer = window.setTimeout(() => {
+    finishIntro();
+  }, delay + 200);
+}
+
+function handleIntroAdvance() {
+  finishIntro();
+}
+
+function handleIntroKeydown(event) {
+  if (event.key !== "Enter" && event.key !== " ") {
+    return;
+  }
+
+  event.preventDefault();
+  finishIntro();
+}
+
+function finishIntro() {
+  if (introCompleted || !introOverlayEl) {
+    return;
+  }
+
+  introCompleted = true;
+  clearIntroTimers();
+  introOverlayEl.removeEventListener("click", handleIntroAdvance);
+  introOverlayEl.removeEventListener("keydown", handleIntroKeydown);
+  document.body.classList.remove("is-intro-active");
+  document.body.classList.add("is-intro-exiting");
+
+  introExitTimer = window.setTimeout(() => {
+    introOverlayEl.hidden = true;
+    document.body.classList.remove("is-intro-exiting");
+  }, 500);
+}
+
+function clearIntroTimers() {
+  introTimers.forEach((timerId) => {
+    window.clearTimeout(timerId);
+  });
+  introTimers = [];
+
+  if (introExitTimer !== null) {
+    window.clearTimeout(introExitTimer);
+    introExitTimer = null;
+  }
 }
