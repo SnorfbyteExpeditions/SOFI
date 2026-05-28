@@ -111,7 +111,7 @@ const scenes = {
     playerBounds: {
       minLeft: 10,
       maxLeft: 298,
-      fixedBottom: 10,
+      fixedBottom: 0,
     },
     hotspots: {
       peter: {
@@ -126,7 +126,7 @@ const scenes = {
         edge: "left",
         destinationSceneId: "campusExterior",
         destinationSpawn: { left: 12, bottom: 20 },
-        walkTo: { left: 10, bottom: 15 },
+        walkTo: { left: 10, bottom: 0 },
         triggerWidth: 24,
         hoverText: "Get outta here",
         message: "You go back outside.",
@@ -135,7 +135,7 @@ const scenes = {
         edge: "right",
         destinationSceneId: "eastCorridor",
         destinationSpawn: { left: 250, bottom: 20 },
-        walkTo: { left: 200, bottom: 15 },
+        walkTo: { left: 280, bottom: 0 },
         triggerWidth: 24,
         hoverText: "The inner sanctum",
         message: "You walk past Peter.",
