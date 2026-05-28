@@ -12,6 +12,7 @@ const petersHead = document.getElementById("peters-head");
 const inventoryListEl = document.getElementById("inventory-list");
 const introOverlayEl = document.getElementById("intro-overlay");
 const introTextEl = document.getElementById("intro-text");
+const devHelpOverlayEl = document.getElementById("dev-help-overlay");
 const verbButtons = Array.from(document.querySelectorAll(".verb"));
 const hotspotButtons = Array.from(document.querySelectorAll(".hotspot"));
 const rootStyle = document.documentElement.style;
@@ -50,6 +51,8 @@ if (gameAudioEl) {
 if (introStartButtonEl) {
   introStartButtonEl.addEventListener("click", handleIntroStartButtonClick);
 }
+
+document.addEventListener("keydown", handleDeveloperKeydown);
 
 const verbLabels = {
   walk: "Walk to",
@@ -93,12 +96,14 @@ const state = {
   selectedInventory: null,
   hoverTarget: null,
   hoverExitText: "",
+  devHelpMode: false,
+  devHelpPoint: null,
   message: "",
   inventory: [],
   flags: {
     duckCollected: false,
     mentorHintUnlocked: false,
-    kioskFixed: false,
+    centaurFixed: false,
   },
 };
 
@@ -128,11 +133,11 @@ const scenes = {
         walkTo: { left: 190, bottom: 15 },
         hiddenWhen: "duckCollected",
       },
-      kiosk: {
-        target: "kiosk",
-        label: "kiosk terminal",
-        rect: { left: 248, bottom: 14, width: 38, height: 60 },
-        walkTo: { left: 261, bottom: 15 },
+      centaur: {
+        target: "centaur",
+        label: "centaur",
+        rect: { left: 213, bottom: -16, width: 76, height: 120 },
+        walkTo: { left: 226, bottom: -15 },
       },
     },
     exits: {
@@ -477,7 +482,7 @@ const targets = {
       talk() {
         if (state.flags.duckCollected) {
           state.flags.mentorHintUnlocked = true;
-          setMessage("Tewo says: Debug the kiosk with the duck.");
+          setMessage("Tewo says: Debug the centaur with the duck.");
           return;
         }
 
@@ -499,19 +504,19 @@ const targets = {
       },
     },
   },
-  kiosk: {
-    name: "kiosk terminal",
+  centaur: {
+    name: "centaur",
     verbs: {
       walk() {
-        setMessage("You walk to the kiosk terminal.");
+        setMessage("You walk to the centaur.");
       },
       look() {
-        if (state.flags.kioskFixed) {
+        if (state.flags.centaurFixed) {
           setMessage("The screen says: BUILD PASSED.");
           return;
         }
 
-        setMessage("A broken campus kiosk terminal.");
+        setMessage("A broken campus centaur.");
       },
       talk() {
         setMessage("The terminal refuses conversation.");
@@ -521,7 +526,7 @@ const targets = {
       },
       use() {
         if (!state.selectedInventory) {
-          setMessage("Use what with the kiosk terminal?");
+          setMessage("Use what with the centaur?");
           return;
         }
 
@@ -535,11 +540,11 @@ const targets = {
           return;
         }
 
-        setMessage(`That does not help the kiosk.`);
+        setMessage(`That does not help the centaur.`);
       },
       debug() {
-        if (state.flags.kioskFixed) {
-          setMessage("The kiosk is already fixed.");
+        if (state.flags.centaurFixed) {
+          setMessage("The centaur is already fixed.");
           return;
         }
 
@@ -553,9 +558,9 @@ const targets = {
           return;
         }
 
-        state.flags.kioskFixed = true;
+        state.flags.centaurFixed = true;
         addInventoryItem("Access Badge");
-        setMessage("The kiosk is fixed. It spits out an Access Badge.");
+        setMessage("The centaur is fixed. It spits out an Access Badge.");
       },
     },
   },
@@ -623,7 +628,7 @@ const targets = {
         setMessage("Peter looks at you, wondering");
       },
       talk() {
-        if (state.flags.kioskFixed) {
+        if (state.flags.centaurFixed) {
           setMessage("Peter says: Oh, hi! Come on in.");
           return;
         }
@@ -720,18 +725,23 @@ sceneEl.addEventListener("click", (event) => {
 });
 
 sceneEl.addEventListener("mousemove", (event) => {
+  state.devHelpPoint = getScenePoint(event);
+  renderDevHelpOverlay();
+
   if (event.target.closest(".hotspot")) {
     state.hoverExitText = "";
     return;
   }
 
-  const exit = getSceneExitAtPoint(getScenePoint(event));
+  const exit = getSceneExitAtPoint(state.devHelpPoint);
   state.hoverExitText = exit?.hoverText ?? "";
   renderActionLine();
 });
 
 sceneEl.addEventListener("mouseleave", () => {
   state.hoverExitText = "";
+  state.devHelpPoint = null;
+  renderDevHelpOverlay();
   renderActionLine();
 });
 
@@ -760,6 +770,21 @@ function selectVerb(verb) {
   renderActionLine();
 }
 
+function handleDeveloperKeydown(event) {
+  if (event.key !== "F3" || !introCompleted) {
+    return;
+  }
+
+  event.preventDefault();
+  state.devHelpMode = !state.devHelpMode;
+
+  if (!state.devHelpMode) {
+    state.devHelpPoint = null;
+  }
+
+  renderDevHelpOverlay();
+}
+
 function interactWithTarget(key) {
   const hotspot = getCurrentScene().hotspots[key];
 
@@ -771,6 +796,11 @@ function interactWithTarget(key) {
 }
 
 function renderActionLine() {
+  if (state.message) {
+    actionLineEl.textContent = state.message;
+    return;
+  }
+
   if (state.hoverTarget) {
     actionLineEl.textContent = buildCommandText(state.hoverTarget);
     return;
@@ -781,12 +811,23 @@ function renderActionLine() {
     return;
   }
 
-  if (state.message) {
-    actionLineEl.textContent = state.message;
+  actionLineEl.textContent = buildCommandText();
+}
+
+function renderDevHelpOverlay() {
+  if (!devHelpOverlayEl) {
     return;
   }
 
-  actionLineEl.textContent = buildCommandText();
+  const point = state.devHelpPoint;
+
+  if (!state.devHelpMode || !point) {
+    devHelpOverlayEl.hidden = true;
+    return;
+  }
+
+  devHelpOverlayEl.hidden = false;
+  devHelpOverlayEl.textContent = `x: ${Math.round(point.left)}  y: ${Math.round(point.bottom)}`;
 }
 
 function buildCommandText(targetName = "") {
@@ -895,6 +936,8 @@ function renderScene() {
   if (scene.id === "aula") {
     peterPopsUp();
   }
+
+  renderDevHelpOverlay();
 }
 
 function movePlayer(position) {
