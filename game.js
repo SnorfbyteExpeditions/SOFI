@@ -51,7 +51,7 @@ const scenes = {
       mentor: {
         target: "mentor",
         label: "Tewo",
-        rect: { left: 12, bottom: 12, width: 42, height: 54 },
+        rect: { left: 24, bottom: 12, width: 10, height: 30 },
         walkTo: { left: 27, bottom: 15 },
       },
       duck: {
@@ -74,8 +74,46 @@ const scenes = {
         destinationSceneId: "sauna",
         destinationSpawn: { left: 286, bottom: 15 },
         walkTo: { left: 10, bottom: 15 },
-        triggerWidth: 24,
+        triggerWidth: 12,
         message: "You arrive to the Hotfix sauna.",
+      },
+      hqentrance: {
+        rect: { left: 12, bottom: 30, width: 10, height: 15 },
+        destinationSceneId: "aula",
+        destinationSpawn: { left: 12, bottom: 0 },
+        walkTo: { left: 10, bottom: 15 },
+        hoverText: "Enter Wapice HQ",
+        message: "You arrive in this temple of code.",
+      },
+    },
+  },
+  aula: {
+    id: "aula",
+    name: "Lobby",
+    background: "images/HqLobby.png",
+    walkMessage: "You walk across the street, trying to look like you totally belong in this codebase.",
+    playerSpawn: { left: 152, bottom: 15 },
+    playerBounds: {
+      minLeft: 10,
+      maxLeft: 298,
+      fixedBottom: 15,
+    },
+    hotspots: {
+      peter: {
+        target: "peter",
+        label: "Peter the Code Guardian",
+        rect: { left: 195, bottom: 92, width: 20, height: 20 },
+        walkTo: { left: 20, bottom: 15 },
+      },
+    },
+    exits: {
+      left: {
+        edge: "left",
+        destinationSceneId: "campusExterior",
+        destinationSpawn: { left: 12, bottom: 20 },
+        walkTo: { left: 10, bottom: 15 },
+        triggerWidth: 24,
+        message: "You go back outside.",
       },
     },
   },
@@ -292,6 +330,40 @@ const targets = {
       },
       debug() {
         setMessage("He says: First, reproduce the problem. Then breathe.");
+      },
+    },
+  },
+  peter: {
+    name: "Peter the Code Guardian",
+    verbs: {
+      walk() {
+        setMessage("You walk over to Peter.");
+      },
+      look() {
+        setMessage("Peter looks at you, wondering");
+      },
+      talk() {
+        // if (state.flags.duckCollected) {
+        //   state.flags.mentorHintUnlocked = true;
+        //   setMessage("Tewo says: Debug the kiosk with the duck.");
+        //   return;
+        // }
+
+        setMessage("Peter says: Do you have an appointment?");
+      },
+      pickup() {
+        setMessage("Peter doesn't want to be picked up.");
+      },
+      use() {
+        if (state.selectedInventory) {
+          setMessage(`Using ${state.selectedInventory} on Peter feels wrong.`);
+          return;
+        }
+
+        setMessage("Use what on Peter?");
+      },
+      debug() {
+        setMessage("No bugs found. Only sarcasm.");
       },
     },
   },
