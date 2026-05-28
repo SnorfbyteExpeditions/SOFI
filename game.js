@@ -68,7 +68,7 @@ const introLines = [
   "Deep in the Quark",
   "The Island of Fire™",
   "Wapice - Leap Of Fate Productions",
-  "TM (c) 2026 All Rights Reserved",
+  "(c) 2026 All Rights Reserved",
   "Created and Designed by Johan, Johan and Tomas",
 ];
 
