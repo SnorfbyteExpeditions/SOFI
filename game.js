@@ -239,7 +239,7 @@ const scenes = {
       southCorridor: {
         rect: { left: 300, bottom: 70, width: 20, height: 80 },
         destinationSceneId: "southCorridor",
-        destinationSpawn: { left: 170, bottom: 20 },
+        destinationSpawn: { left: 170, bottom: 15 },
         walkTo: { left: 300, bottom: 70 },
         triggerWidth: 24,
         hoverText: "The South Side Corridor",
@@ -264,8 +264,8 @@ const scenes = {
     playerScale: 3,
     playerSpawn: { left: 152, bottom: 15 },
     playerBounds: {
-      minLeft: 40,
-      maxLeft: 100,
+      minLeft: 130,
+      maxLeft: 185,
       fixedBottom: 15,
     },
     hotspots: {
@@ -280,7 +280,7 @@ const scenes = {
       balcony: {
         rect: { left: 170, bottom: 80, width: 30, height: 60 },
         destinationSceneId: "balcony",
-        destinationSpawn: { left: 120, bottom: 20 },
+        destinationSpawn: { left: 120, bottom: 22 },
         walkTo: { left: 170, bottom: 80 },
         triggerWidth: 24,
         message: "You towards the balcony.",
@@ -363,9 +363,9 @@ const scenes = {
     playerScale: 2,
     playerSpawn: { left: 152, bottom: 15 },
     playerBounds: {
-      minLeft: 10,
-      maxLeft: 298,
-      fixedBottom: 15,
+      minLeft: 115,
+      maxLeft: 185,
+      fixedBottom: 22,
     },
     hotspots: {
     },
@@ -373,7 +373,7 @@ const scenes = {
       southCorridor: {
         rect: { left: 180, bottom: 30, width: 30, height: 70 },
         destinationSceneId: "southCorridor",
-        destinationSpawn: { left: 170, bottom: 20 },
+        destinationSpawn: { left: 170, bottom: 15 },
         walkTo: { left: 190, bottom: 30 },
         triggerWidth: 24,
         hoverText: "Inside",
