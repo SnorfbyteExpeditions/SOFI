@@ -290,7 +290,7 @@ const scenes = {
         edge: "right",
         destinationSceneId: "eastCorridor",
         destinationSpawn: { left: 250, bottom: 20 },
-        walkTo: { left: 60, bottom: 15 },
+        walkTo: { left: 290, bottom: 0 },
         triggerWidth: 24,
         hoverText: "Towards the lobby",
         message: "You walk back towards the lobby.",
