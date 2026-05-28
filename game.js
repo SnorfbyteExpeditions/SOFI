@@ -105,7 +105,7 @@ const scenes = {
     id: "aula",
     name: "Lobby",
     background: "images/HqLobby.png",
-    walkMessage: "You walk across the street, trying to look like you totally belong in this codebase.",
+    walkMessage: "You cautiously make your way past the front desk.",
     playerScale: 3,
     playerSpawn: { left: 152, bottom: 10 },
     playerBounds: {
@@ -128,6 +128,7 @@ const scenes = {
         destinationSpawn: { left: 12, bottom: 20 },
         walkTo: { left: 10, bottom: 15 },
         triggerWidth: 24,
+        hoverText: "Get outta here",
         message: "You go back outside.",
       },
       pastPeter: {
@@ -136,6 +137,7 @@ const scenes = {
         destinationSpawn: { left: 250, bottom: 20 },
         walkTo: { left: 200, bottom: 15 },
         triggerWidth: 24,
+        hoverText: "The inner sanctum",
         message: "You walk past Peter.",
       },
     },
