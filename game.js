@@ -122,7 +122,7 @@ const scenes = {
     hotspots: {
       mentor: {
         target: "mentor",
-        label: "Tewo",
+        label: "Petri",
         rect: { left: 24, bottom: 8, width: 12, height: 36 },
         walkTo: { left: 27, bottom: 15 },
       },
@@ -305,7 +305,7 @@ const scenes = {
     hotspots: {},
     exits: {
       balcony: {
-        rect: { left: 170, bottom: 80, width: 30, height: 60 },
+        rect: { left: 160, bottom: 80, width: 20, height: 35 },
         destinationSceneId: "balcony",
         destinationSpawn: { left: 120, bottom: 22 },
         walkTo: { left: 170, bottom: 80 },
@@ -313,11 +313,20 @@ const scenes = {
         message: "You towards the balcony.",
         hoverText: "The Wapice™ HQ Balcony™",
       },
+      officeLandscape: {
+        rect: { left: 185, bottom: 80, width: 20, height: 35 },
+        destinationSceneId: "officeLandscape",
+        destinationSpawn: { left: 120, bottom: 30 },
+        walkTo: { left: 170, bottom: 80 },
+        triggerWidth: 24,
+        hoverText: "More office space",
+        message: "You wander into the innermost depths of Wapice HQ™.",
+      },
       jukkabrosRoom: {
         edge: "left",
         destinationSceneId: "jukkaBrosOffice",
         destinationSpawn: { left: 12, bottom: 20 },
-        walkTo: { left: 150, bottom: 100 },
+        walkTo: { left: 0, bottom: 0 },
         triggerWidth: 24,
         hoverText: "JukkaBros' office",
         message: "You enter the domain of JukkaBros",
@@ -405,25 +414,35 @@ const scenes = {
     id: "officeLandscape",
     name: "An empty office landscape",
     background: "images/scenes/HqOfficeLandscape.png",
-    walkMessage: "You walk along this ominous corridor",
+    walkMessage: "You all but get lost in this maze of cubicles.",
+    playerScale: 2,
     playerSpawn: { left: 152, bottom: 15 },
     playerBounds: {
       minLeft: 10,
       maxLeft: 298,
-      fixedBottom: 15,
+      fixedBottom: 30,
     },
     hotspots: {},
     exits: {
       balcony: {
         edge: "left",
         destinationSceneId: "balcony",
-        destinationSpawn: { left: 12, bottom: 20 },
-        walkTo: { left: 10, bottom: 15 },
+        destinationSpawn: { left: 120, bottom: 22 },
+        walkTo: { left: 0, bottom: 20 },
         triggerWidth: 24,
-        hoverText: "The balcony",
+        hoverText: "The Wapice HQ Balcony™",
         message: "You walk around on the balcony.",
       },
+      southCorridor: {
+        rect: { left: 0, bottom: 0, width: 320, height: 24 },
+        destinationSceneId: "southCorridor",
+        destinationSpawn: { left: 170, bottom: 15 },
+        walkTo: { left: 170, bottom: 15 },
+        triggerWidth: 24,
+        hoverText: "The South Side Corridor",
+        message: "You go towards the south corridor.",
       },
+    },
   },
   balcony: {
     id: "balcony",
@@ -522,33 +541,33 @@ state.playerPosition = { ...scenes[state.currentSceneId].playerSpawn };
 
 const targets = {
   mentor: {
-    name: "Tewo",
+    name: "Petri",
     verbs: {
       walk() {
-        setMessage("You walk over to Tewo.");
+        setMessage("You walk over to Petri.");
       },
       look() {
-        setMessage("Tewo looks highly employable.");
+        setMessage("Petri looks highly employable.");
       },
       talk() {
         if (state.flags.duckCollected) {
           state.flags.mentorHintUnlocked = true;
-          setMessage("Tewo says: Debug the centaur with the duck.");
+          setMessage("Petri says: Debug the centaur with the duck.");
           return;
         }
 
-        setMessage("Tewo says: Find a rubber duck first.");
+        setMessage("Petri says: Find a rubber duck first.");
       },
       pickup() {
         setMessage("Better not pick up your mentor.");
       },
       use() {
         if (state.selectedInventory) {
-          setMessage(`Using ${state.selectedInventory} on Tewo feels wrong.`);
+          setMessage(`Using ${state.selectedInventory} on Petri feels wrong.`);
           return;
         }
 
-        setMessage("Use what on Tewo?");
+        setMessage("Use what on Petri?");
       },
       debug() {
         setMessage("No bugs found. Only sarcasm.");
@@ -582,7 +601,7 @@ const targets = {
         }
 
         if (state.selectedInventory === "Rubber Duck" && !state.flags.mentorHintUnlocked) {
-          setMessage("Maybe ask Tewo first.");
+          setMessage("Maybe ask Petri first.");
           return;
         }
 
