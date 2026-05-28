@@ -1,6 +1,8 @@
 const sceneEl = document.getElementById("scene");
 const sceneBackgroundEl = document.querySelector(".scene-background");
 const introAudioEl = document.getElementById("intro-audio");
+const gameAudioEl = document.getElementById("game-audio");
+const introStartButtonEl = document.getElementById("intro-start-button");
 const introPreludeEl = document.getElementById("intro-prelude");
 const introMainSceneEl = document.getElementById("intro-main-scene");
 const introTitleEl = document.querySelector(".intro-title");
@@ -16,9 +18,9 @@ const SCENE_NATIVE_WIDTH = 320;
 const SCENE_NATIVE_HEIGHT = 144;
 let pendingInteractionTimer = null;
 let introCompleted = false;
+let introActivated = false;
 let introSequenceStarted = false;
 let introVisualsVisible = false;
-let introAudioUnmuted = false;
 let introPreludeTimer = null;
 let introTimers = [];
 let introExitTimer = null;
@@ -33,16 +35,19 @@ if (introOverlayEl) {
 
 if (introAudioEl) {
   introAudioEl.volume = 1;
-  introAudioEl.muted = true;
+  logIntroAudioState("audio-init");
   introAudioEl.addEventListener("loadeddata", handleIntroAudioReady);
   introAudioEl.addEventListener("canplaythrough", handleIntroAudioReady);
   introAudioEl.addEventListener("error", handleIntroAudioError);
-  document.addEventListener("pointerdown", startIntroAudioPlayback, { once: true, capture: true });
-  document.addEventListener("keydown", startIntroAudioPlayback, { once: true, capture: true });
-  document.addEventListener("pointermove", handleIntroAudioUnmuteOnMove, { capture: true });
-  document.addEventListener("mousemove", handleIntroAudioUnmuteOnMove, { capture: true });
+}
 
-  startIntroAudioPlayback();
+if (gameAudioEl) {
+  gameAudioEl.volume = 0.35;
+  gameAudioEl.muted = true;
+}
+
+if (introStartButtonEl) {
+  introStartButtonEl.addEventListener("click", handleIntroStartButtonClick);
 }
 
 const verbLabels = {
@@ -56,9 +61,9 @@ const verbLabels = {
 
 const introLineVisibleDuration = 6000;
 const introLineGapDuration = 1500;
-const introPreludeDuration = 6000;
+const introPreludeDuration = 5000;
 const introPreludeFadeDuration = 500;
-const introTitleLineIndex = 3;
+const introTitleLineIndex = 2;
 const introPreludeStages = [
   "images/wapiceLogo.png",
   "images/leapoffateproductions.png",
@@ -66,9 +71,18 @@ const introPreludeStages = [
 const introLines = [
   "Deep in the Quark",
   "The Island of Fire",
-  "Wapice - Leap Of Fate Productions",
   "TM (c) 2026 All Rights Reserved",
-  "Created and Designed by Johan, Johan and Tomas",
+  "Created and Designed by Johan A, Johan S and Tomas I",
+  "Written and Programmed by ChatGPT-4",
+  "Background Art by Johan S and ChatGPT",
+  "Animation by nobody",
+  "Original Music by Michael Land...",
+  "...Barney Jones and Andy Newell of earwax productions...",
+  "...and Patrick Mundy",
+  "Produced by Wapice and Leap of Fate productions (Lassi Niemistö)",
+  "Special thanks to Leison Café...",
+  "Rubber ducks...",
+  "The person who said it's a quick hackathon project",
 ];
 
 const state = {
@@ -1013,7 +1027,7 @@ function clearPendingInteraction() {
 }
 
 function startIntroSequence() {
-  if (introSequenceStarted || !introOverlayEl || !introTextEl) {
+  if (introSequenceStarted || !introOverlayEl || !introTextEl || !introActivated) {
     return;
   }
 
@@ -1023,11 +1037,11 @@ function startIntroSequence() {
 }
 
 function handleIntroAudioReady() {
-  if (!introAudioEl || introCompleted) {
+  if (!introAudioEl || introCompleted || !introActivated) {
     return;
   }
 
-  startIntroSequence();
+  logIntroAudioState("audio-ready");
 }
 
 function handleIntroAudioError() {
@@ -1035,7 +1049,7 @@ function handleIntroAudioError() {
     introAudioEl.muted = false;
   }
 
-  startIntroSequence();
+  logIntroAudioState("audio-error");
 }
 
 function startIntroAudioPlayback() {
@@ -1044,34 +1058,30 @@ function startIntroAudioPlayback() {
   }
 
   introAudioEl.volume = 1;
-  introAudioEl.muted = true;
+  introAudioEl.muted = false;
+  logIntroAudioState("audio-play-attempt-unmuted");
 
   const audioPlayPromise = introAudioEl.play();
   if (audioPlayPromise?.catch) {
     audioPlayPromise.catch(() => {
-      // If autoplay is blocked, the one-time input fallback will try again.
+      // Playback is started from a user gesture; log if Edge still blocks it.
+      logIntroAudioState("audio-play-rejected");
     });
   }
 }
 
-function handleIntroAudioUnmuteOnMove() {
-  if (!introAudioEl || introCompleted || !introVisualsVisible || introAudioUnmuted) {
+function logIntroAudioState(label) {
+  if (!introAudioEl) {
     return;
   }
 
-  introAudioEl.muted = false;
-  introAudioEl.volume = 1;
-  introAudioUnmuted = true;
-
-  document.removeEventListener("pointermove", handleIntroAudioUnmuteOnMove, true);
-  document.removeEventListener("mousemove", handleIntroAudioUnmuteOnMove, true);
-
-  const audioPlayPromise = introAudioEl.play();
-  if (audioPlayPromise?.catch) {
-    audioPlayPromise.catch(() => {
-      // Ignore; muted autoplay may still need a stronger user gesture.
-    });
-  }
+  console.log(`[intro-audio] ${label}`, {
+    muted: introAudioEl.muted,
+    paused: introAudioEl.paused,
+    readyState: introAudioEl.readyState,
+    currentTime: introAudioEl.currentTime,
+    volume: introAudioEl.volume,
+  });
 }
 
 function startIntroPreludeSequence(stageIndex) {
@@ -1091,6 +1101,10 @@ function startIntroPreludeSequence(stageIndex) {
 
   introVisualsVisible = true;
   introPreludeEl.src = stageSrc;
+
+  if (stageIndex === 1) {
+    startIntroAudioPlayback();
+  }
 
   window.requestAnimationFrame(() => {
     introPreludeEl.classList.add("is-visible");
@@ -1139,7 +1153,7 @@ function startMainIntroSequence() {
     introPreludeTimer = null;
   }
 
-  let delay = 600;
+  let delay = 1100;
 
   introLines.forEach((lineText, index) => {
     introTimers.push(window.setTimeout(() => {
@@ -1164,7 +1178,7 @@ function startMainIntroSequence() {
 }
 
 function handleIntroAdvance() {
-  if (introCompleted) {
+  if (introCompleted || !introActivated) {
     return;
   }
 
@@ -1177,11 +1191,28 @@ function handleIntroKeydown(event) {
   }
 
   event.preventDefault();
-  if (introCompleted) {
+  if (introCompleted || !introActivated) {
     return;
   }
 
   finishIntro();
+}
+
+function handleIntroStartButtonClick(event) {
+  event.stopPropagation();
+
+  if (introActivated) {
+    return;
+  }
+
+  introActivated = true;
+
+  if (introStartButtonEl) {
+    introStartButtonEl.classList.add("is-hidden");
+  }
+
+  startGameAudioPlayback();
+  startIntroSequence();
 }
 
 function finishIntro() {
@@ -1192,13 +1223,34 @@ function finishIntro() {
   introCompleted = true;
   introVisualsVisible = false;
   clearIntroTimers();
+  logIntroAudioState("audio-finish");
+  if (introAudioEl) {
+    introAudioEl.pause();
+    introAudioEl.currentTime = 0;
+  }
+
+  if (gameAudioEl) {
+    gameAudioEl.currentTime = 0;
+    gameAudioEl.muted = false;
+    const gamePlayPromise = gameAudioEl.play();
+    if (gamePlayPromise?.catch) {
+      gamePlayPromise.catch(() => {
+        console.log("[game-audio] play rejected", {
+          muted: gameAudioEl.muted,
+          paused: gameAudioEl.paused,
+          readyState: gameAudioEl.readyState,
+          currentTime: gameAudioEl.currentTime,
+          volume: gameAudioEl.volume,
+        });
+      });
+    }
+  }
+
   introOverlayEl.removeEventListener("pointerdown", handleIntroAdvance);
   introOverlayEl.removeEventListener("click", handleIntroAdvance);
   introOverlayEl.removeEventListener("keydown", handleIntroKeydown);
   document.removeEventListener("pointerdown", handleIntroAdvance, true);
   document.removeEventListener("keydown", handleIntroKeydown, true);
-  document.removeEventListener("pointermove", handleIntroAudioUnmuteOnMove, true);
-  document.removeEventListener("mousemove", handleIntroAudioUnmuteOnMove, true);
   document.body.classList.remove("is-intro-active");
   document.body.classList.remove("is-intro-exiting");
   introOverlayEl.remove();
@@ -1218,5 +1270,27 @@ function clearIntroTimers() {
   if (introExitTimer !== null) {
     window.clearTimeout(introExitTimer);
     introExitTimer = null;
+  }
+}
+
+function startGameAudioPlayback() {
+  if (!gameAudioEl || introCompleted) {
+    return;
+  }
+
+  gameAudioEl.muted = true;
+  gameAudioEl.volume = 0.35;
+
+  const gamePlayPromise = gameAudioEl.play();
+  if (gamePlayPromise?.catch) {
+    gamePlayPromise.catch(() => {
+      console.log("[game-audio] play rejected", {
+        muted: gameAudioEl.muted,
+        paused: gameAudioEl.paused,
+        readyState: gameAudioEl.readyState,
+        currentTime: gameAudioEl.currentTime,
+        volume: gameAudioEl.volume,
+      });
+    });
   }
 }
