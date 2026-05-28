@@ -236,6 +236,7 @@ body.is-intro-exiting .intro-overlay {
   pointer-events: none;
 }
 
+
 .hotspot,
 .player {
   position: absolute;
@@ -269,13 +270,6 @@ body.is-intro-exiting .intro-overlay {
   position: absolute;
   left: 0;
   bottom: 0;
-}
-
-.hotspot-peter {
-  left: 40px;
-  bottom: 20px;
-  width: 20px;
-  height: 20px;
 }
 
 .sprite-peter {
