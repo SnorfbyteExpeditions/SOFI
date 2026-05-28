@@ -215,6 +215,8 @@ const scenes = {
         triggerWidth: 24,
         hoverText: "The inner sanctum",
         message: "You walk past Peter.",
+        requiredInventoryItem: "Access Badge",
+        blockedMessage: "You need an Access Badge",
       },
     },
   },
@@ -1015,6 +1017,12 @@ function queueInteraction(key, position, verb, inventoryItem) {
 }
 
 function queueSceneExit(exit) {
+  if (exit.requiredInventoryItem && !hasInventoryItem(exit.requiredInventoryItem)) {
+    setMessage(exit.blockedMessage ?? `You need a ${exit.requiredInventoryItem}`);
+    renderActionLine();
+    return;
+  }
+
   const isAlreadyThere = state.playerPosition.left === exit.walkTo.left && state.playerPosition.bottom === exit.walkTo.bottom;
   const duration = movePlayer(exit.walkTo);
 
