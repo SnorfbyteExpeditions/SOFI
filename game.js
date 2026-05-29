@@ -521,6 +521,14 @@ const scenes = {
         hoverText: "The Scrum Bar",
         message: "You head over to the Scrum Bar.",
       },
+      secretDoor: {
+        rect: { left: 119, bottom: 18, width: 15, height: 96 },
+        destinationSceneId: "saunaInterior",
+        destinationSpawn: { left: 34, bottom: 15 },
+        walkTo: { left: 110, bottom: 15 },
+        hoverText: "Enter Hotfix sauna",
+        message: "You slip through a hidden door behind the spruce.",
+      },
     },
   },
   scrumBar: {
