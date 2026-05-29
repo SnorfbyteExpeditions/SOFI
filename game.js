@@ -512,13 +512,45 @@ const scenes = {
         hoverText: "Back to the Code Temple",
         message: "You arrive at the Code Temple.",
       },
-      secretDoor: {
-        rect: { left: 119, bottom: 18, width: 15, height: 96 },
-        destinationSceneId: "saunaInterior",
-        destinationSpawn: { left: 34, bottom: 15 },
-        walkTo: { left: 110, bottom: 15 },
-        hoverText: "Enter Hotfix sauna",
-        message: "You slip through a hidden door behind the spruce.",
+      left: {
+        edge: "left",
+        destinationSceneId: "scrumBar",
+        destinationSpawn: { left: 286, bottom: 15 },
+        walkTo: { left: 10, bottom: 15 },
+        triggerWidth: 24,
+        hoverText: "The Scrum Bar",
+        message: "You head over to the Scrum Bar.",
+      },
+    },
+  },
+  scrumBar: {
+    id: "scrumBar",
+    name: "Scrum Bar",
+    background: "images/scenes/ScrumBar.png",
+    walkMessage: "You enter the Scrum Bar, where every drink sounds like a meeting invite.",
+    playerSpawn: { left: 286, bottom: 15 },
+    playerBounds: {
+      minLeft: 10,
+      maxLeft: 298,
+      fixedBottom: 15,
+    },
+    hotspots: {
+      scrumMenu: {
+        target: "scrumMenu",
+        label: "menu",
+        rect: { left: 124, bottom: 21, width: 14, height: 17 },
+        walkTo: { left: 124, bottom: 15 },
+      },
+    },
+    exits: {
+      right: {
+        edge: "right",
+        destinationSceneId: "sauna",
+        destinationSpawn: { left: 16, bottom: 15 },
+        walkTo: { left: 298, bottom: 15 },
+        triggerWidth: 24,
+        hoverText: "Back to the sauna",
+        message: "You leave the Scrum Bar.",
       },
     },
   },
@@ -728,6 +760,29 @@ const targets = {
       },
       debug() {
         setMessage("No bugs found. Only anticipation.");
+      },
+    },
+  },
+  scrumMenu: {
+    name: "Scrum Bar menu",
+    verbs: {
+      walk() {
+        setMessage("You step up to the menu.");
+      },
+      look() {
+        setMessage("A menu full of iterative snacks and sprint-sized meals.");
+      },
+      talk() {
+        setMessage("The menu remains stubbornly silent.");
+      },
+      pickup() {
+        setMessage("You can’t just steal the menu.");
+      },
+      use() {
+        setMessage("Using the menu would probably involve ordering something.");
+      },
+      debug() {
+        setMessage("The menu is well tested. Too many branches, though.");
       },
     },
   },
