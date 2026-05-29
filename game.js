@@ -75,7 +75,7 @@ const introPreludeDuration = 5000;
 const introPreludeFadeDuration = 500;
 const introTitleLineIndex = 2;
 const introPreludeStages = [
-  "images/WapiceLogo.png",
+  "images/wapiceLogo.png",
   "images/leapoffateproductions.png",
 ];
 const introLines = [
