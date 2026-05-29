@@ -14,6 +14,8 @@ const introOverlayEl = document.getElementById("intro-overlay");
 const introTextEl = document.getElementById("intro-text");
 const devHelpOverlayEl = document.getElementById("dev-help-overlay");
 const dialoguePanelEl = document.getElementById("dialogue-panel");
+const dialogueSpeakerEl = document.getElementById("dialogue-speaker");
+const dialogueTextEl = document.getElementById("dialogue-text");
 const dialogueChoicesEl = document.getElementById("dialogue-choices");
 const gameWindowEl = document.getElementById("game-window");
 const verbButtons = Array.from(document.querySelectorAll(".verb"));
@@ -22,6 +24,7 @@ const rootStyle = document.documentElement.style;
 const SCENE_NATIVE_WIDTH = 320;
 const SCENE_NATIVE_HEIGHT = 144;
 let pendingInteractionTimer = null;
+let dialogueTimers = [];
 let introCompleted = false;
 let introActivated = false;
 let introSequenceStarted = false;
@@ -106,8 +109,8 @@ const state = {
   inventory: [],
   dialogue: {
     active: false,
+    speaker: "",
     text: "",
-    choices: [],
   },
   flags: {
     duckCollected: false,
@@ -569,11 +572,11 @@ const targets = {
       talk() {
         if (state.flags.duckCollected) {
           state.flags.mentorHintUnlocked = true;
-          setMessage("Petri says: Debug the centaur with the duck.");
+          startPetriTalkAfterDuck();
           return;
         }
 
-        setMessage("Petri says: Find a rubber duck first.");
+        startPetriIntroDialogue();
       },
       pickup() {
         setMessage("Better not pick up your mentor.");
@@ -962,6 +965,10 @@ if (!introAudioEl) {
 window.addEventListener("resize", updateGameScale);
 
 function selectVerb(verb) {
+  if (isDialogueActive()) {
+    return;
+  }
+
   clearPendingInteraction();
   state.selectedVerb = verb;
   state.message = "";
@@ -989,6 +996,10 @@ function handleDeveloperKeydown(event) {
 }
 
 function interactWithTarget(key) {
+  if (isDialogueActive()) {
+    return;
+  }
+
   const hotspot = getCurrentScene().hotspots[key];
 
   if (!hotspot) {
@@ -1000,7 +1011,7 @@ function interactWithTarget(key) {
 
 function renderActionLine() {
   if (state.dialogue.active) {
-    actionLineEl.textContent = state.dialogue.text;
+    actionLineEl.textContent = "";
     return;
   }
 
@@ -1064,155 +1075,116 @@ function clearDialogueTimers() {
   }
 }
 
-function closeDialogue(preserveMessage = true) {
+function closeDialogue() {
   clearDialogueTimers();
-
-  const finalText = state.dialogue.text;
   state.dialogue.active = false;
+  state.dialogue.speaker = "";
   state.dialogue.text = "";
-  state.dialogue.choices = [];
   state.hoverTarget = null;
   state.hoverExitText = "";
-
-  if (preserveMessage && finalText) {
-    state.message = finalText;
-  }
-
   syncDialogueLock();
   renderDialoguePanel();
   renderActionLine();
 }
 
+function syncDialogueLock() {
+  verbButtons.forEach((button) => {
+    button.disabled = state.dialogue.active;
+  });
+
+  hotspotButtons.forEach((button) => {
+    button.disabled = state.dialogue.active;
+  });
+
+  inventoryListEl.querySelectorAll(".inventory-item").forEach((button) => {
+    button.disabled = state.dialogue.active;
+  });
+
+  document.getElementById("game-window")?.classList.toggle("is-dialogue-locked", state.dialogue.active);
+}
+
 function renderDialoguePanel() {
-  if (!dialoguePanelEl || !dialogueChoicesEl) {
+  if (!dialoguePanelEl || !dialogueSpeakerEl || !dialogueTextEl) {
     return;
   }
 
-  if (!state.dialogue.active || state.dialogue.choices.length === 0) {
+  if (!state.dialogue.active) {
     dialoguePanelEl.hidden = true;
-    dialogueChoicesEl.innerHTML = "";
+    dialogueSpeakerEl.textContent = "";
+    dialogueTextEl.textContent = "";
     return;
   }
 
   dialoguePanelEl.hidden = false;
-
-  dialogueChoicesEl.innerHTML = state.dialogue.choices
-    .map((choice, index) => `<button class="dialogue-choice" type="button" data-choice="${index}">${choice.label}</button>`)
-    .join("");
-
-  dialogueChoicesEl.querySelectorAll(".dialogue-choice").forEach((button) => {
-    button.addEventListener("click", () => {
-      const choice = state.dialogue.choices[Number(button.dataset.choice)];
-
-      if (!choice) {
-        return;
-      }
-
-      choice.onSelect();
-    });
-  });
+  dialogueSpeakerEl.textContent = state.dialogue.speaker;
+  dialogueTextEl.textContent = state.dialogue.text;
 }
 
-function startSaunaGuruDialogue() {
-  clearPendingInteraction();
-  clearDialogueTimers();
-
-  state.message = "";
-  state.hoverTarget = null;
-  state.hoverExitText = "";
+function showDialogueLine(speaker, text) {
   state.dialogue.active = true;
-  state.dialogue.text = "Ah… I sensed your bugs before you even entered the steam.";
-  state.dialogue.choices = [];
-
+  state.dialogue.speaker = speaker;
+  state.dialogue.text = text;
   syncDialogueLock();
   renderDialoguePanel();
   renderActionLine();
+}
 
-  dialogueTimers.push(window.setTimeout(() => {
-    if (!state.dialogue.active) {
+function playDialogueSequence(steps) {
+  clearPendingInteraction();
+  clearDialogueTimers();
+  state.message = "";
+  state.hoverTarget = null;
+  state.hoverExitText = "";
+
+  if (steps.length === 0) {
+    return;
+  }
+
+  let index = 0;
+
+  const advance = () => {
+    if (index >= steps.length) {
+      closeDialogue();
       return;
     }
 
-    state.dialogue.text = "Tell me… what have you broken?";
-    state.dialogue.choices = [
-      {
-        label: "I wouldn’t call it broken… more like unexpectedly permanent.",
-        onSelect: () => handleSaunaGuruChoice(1),
-      },
-      {
-        label: "Everything. I broke everything.",
-        onSelect: () => handleSaunaGuruChoice(2),
-      },
-      {
-        label: "Nothing. It stopped working completely on its own.",
-        onSelect: () => handleSaunaGuruChoice(3),
-      },
-    ];
+    const step = steps[index++];
+    showDialogueLine(step.speaker, step.text);
 
-    renderDialoguePanel();
-    renderActionLine();
-  }, 5000));
+    if (index >= steps.length) {
+      dialogueTimers.push(window.setTimeout(() => {
+        closeDialogue();
+      }, step.pauseMs ?? 3000));
+      return;
+    }
+
+    dialogueTimers.push(window.setTimeout(advance, step.pauseMs ?? 3000));
+  };
+
+  advance();
 }
 
-function handleSaunaGuruChoice(choiceId) {
-  if (!state.dialogue.active) {
-    return;
-  }
+function startPetriIntroDialogue() {
+  const PETRI_FINAL_RESPONSE_PAUSE_MS = 3000;
 
-  clearDialogueTimers();
-  state.dialogue.choices = [];
-  renderDialoguePanel();
+  playDialogueSequence([
+    { speaker: "Johan", text: "Hi!", pauseMs: 3000 },
+    { speaker: "Johan", text: "My name's Johan Devsson, and I want to be a software developer", pauseMs: 3000 },
+    { speaker: "Petri", text: "Yikes", pauseMs: 3000 },
+    { speaker: "Petri", text: "Dont sneak up on me like that!", pauseMs: 3000 },
+    { speaker: "Petri", text: "Well...then.. Devberg--", pauseMs: 3000 },
+    { speaker: "Johan", text: "DEVSSON.", pauseMs: 3000 },
+    { speaker: "Johan", text: "Johan DEVSSON.", pauseMs: 3000 },
+    { speaker: "Petri", text: "So, you want to be a software developer, eh?", pauseMs: 3000 },
+    { speaker: "Petri", text: "You look more like a junior PowerPoint specialist", pauseMs: 3000 },
+    { speaker: "Petri", text: "But if you are serious about developing you need a rubber duck first", pauseMs: PETRI_FINAL_RESPONSE_PAUSE_MS },
+  ]);
+}
 
-  if (choiceId === 1) {
-    state.dialogue.text = "Ahh… you cling to illusion. Many have tried to rename their bugs… none have escaped them.";
-    renderActionLine();
-
-    dialogueTimers.push(window.setTimeout(() => {
-      state.dialogue.text = "A thing given a better name is still broken. Until you accept this… your code will resist you.";
-      renderActionLine();
-
-      dialogueTimers.push(window.setTimeout(() => {
-        closeDialogue(true);
-      }, 5000));
-    }, 5000));
-    return;
-  }
-
-  if (choiceId === 2) {
-    state.dialogue.text = "Good… very good.";
-    renderActionLine();
-
-    dialogueTimers.push(window.setTimeout(() => {
-      state.flags.debuggingBranchUnlocked = true;
-      addInventoryItem("Debugging Branch");
-      state.dialogue.text = "Take this. The Debugging Branch. When the code burns… you will know where to look.";
-      renderInventory();
-      renderScene();
-      renderActionLine();
-
-      dialogueTimers.push(window.setTimeout(() => {
-        closeDialogue(true);
-      }, 5000));
-    }, 5000));
-    return;
-  }
-
-  state.dialogue.text = "Ah… the ancient art of blaming the void.";
-  renderActionLine();
-
-  dialogueTimers.push(window.setTimeout(() => {
-    state.dialogue.text = "Systems do not fail alone. There is always… a Johan somewhere.";
-    renderActionLine();
-
-    dialogueTimers.push(window.setTimeout(() => {
-      state.dialogue.text = "Return when you are ready to take responsibility.";
-      renderActionLine();
-
-      dialogueTimers.push(window.setTimeout(() => {
-        closeDialogue(true);
-      }, 5000));
-    }, 5000));
-  }, 5000));
+function startPetriTalkAfterDuck() {
+  playDialogueSequence([
+    { speaker: "Petri", text: "See? When you follow my advice, things tend to work out.", pauseMs: 3000 },
+  ]);
 }
 
 function addInventoryItem(itemName) {
@@ -1250,6 +1222,7 @@ function hasInventoryItem(itemName) {
 function renderInventory() {
   if (state.inventory.length === 0) {
     inventoryListEl.innerHTML = '<li class="inventory-empty">Empty</li>';
+    syncDialogueLock();
     return;
   }
 
