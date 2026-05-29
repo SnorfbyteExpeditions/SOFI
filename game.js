@@ -355,7 +355,7 @@ const scenes = {
     id: "jukkaBrosOffice",
     name: "Bow before the Steward of Wapice™",
     background: "images/scenes/HqJukkaBrosOffice.png",
-    walkMessage: "You walk in awe before the mighty JukkaBros",
+    walkMessage: "You stand in the presence of the mighty JukkaBros",
     playerScale: 4,
     playerBottomOffset: -45,
     playerSpawn: { left: 152, bottom: 15 },
@@ -365,6 +365,12 @@ const scenes = {
       fixedBottom: 20,
     },
     hotspots: {
+      jukkabros: {
+        target: "jukkabros",
+        label: "Johan",
+        rect: { left: 140, bottom: 3, width: 45, height: 80 },
+        walkTo: { left: 120, bottom: 15 },
+      }
     },
     exits: {
       eastCorridor: {
@@ -402,11 +408,11 @@ const scenes = {
     exits: {
       eastCorridor: {
         edge: "right",
-        destinationSceneId: "eastCorridor",
+        destinationSceneId: "southCorridor",
         destinationSpawn: { left: 12, bottom: 20 },
         walkTo: { left: 100, bottom: 15 },
         triggerWidth: 24,
-        message: "You walk back towards the lobby.",
+        message: "You walk back out to the corridor.",
       },
     }
   },
@@ -731,7 +737,7 @@ const targets = {
         setMessage("Anssi smiles at you");
       },
       talk() {
-        setMessage("Anssy says: Marketing is awesome!");
+        setMessage("Anssi says: Marketing is awesome!");
       },
       pickup() {
         setMessage("Come on dude, don't do that");
@@ -746,6 +752,34 @@ const targets = {
       },
       debug() {
         setMessage("No bugs in marketing.");
+      },
+    },
+  },
+  jukkabros: {
+    name: "Johan the Shop Steward",
+    verbs: {
+      walk() {
+        setMessage("You walk over to Johan.");
+      },
+      look() {
+        setMessage("Wow! This guy is awesome!");
+      },
+      talk() {
+        setMessage("Johan says: Hi there!");
+      },
+      pickup() {
+        setMessage("Alone? Haah! Good luck with that!");
+      },
+      use() {
+        if (state.selectedInventory) {
+          setMessage(`Using ${state.selectedInventory} on Johan does not seem very wise.`);
+          return;
+        }
+
+        setMessage("Use what on Johan?");
+      },
+      debug() {
+        setMessage("Johan is bug free.");
       },
     },
   },
