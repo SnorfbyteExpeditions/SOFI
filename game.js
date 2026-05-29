@@ -32,7 +32,6 @@ let introVisualsVisible = false;
 let introPreludeTimer = null;
 let introTimers = [];
 let introExitTimer = null;
-let dialogueTimers = [];
 
 if (introOverlayEl) {
   document.body.classList.add("is-intro-active");
@@ -111,6 +110,7 @@ const state = {
     active: false,
     speaker: "",
     text: "",
+    choices: [],
   },
   flags: {
     duckCollected: false,
@@ -1080,6 +1080,7 @@ function closeDialogue() {
   state.dialogue.active = false;
   state.dialogue.speaker = "";
   state.dialogue.text = "";
+  state.dialogue.choices = [];
   state.hoverTarget = null;
   state.hoverExitText = "";
   syncDialogueLock();
@@ -1118,6 +1119,33 @@ function renderDialoguePanel() {
   dialoguePanelEl.hidden = false;
   dialogueSpeakerEl.textContent = state.dialogue.speaker;
   dialogueTextEl.textContent = state.dialogue.text;
+
+  if (!dialogueChoicesEl) {
+    return;
+  }
+
+  if (!state.dialogue.choices.length) {
+    dialogueChoicesEl.hidden = true;
+    dialogueChoicesEl.innerHTML = "";
+    return;
+  }
+
+  dialogueChoicesEl.hidden = false;
+  dialogueChoicesEl.innerHTML = state.dialogue.choices
+    .map((choice, index) => `<button class="dialogue-choice" type="button" data-choice="${index}">${choice.label}</button>`)
+    .join("");
+
+  dialogueChoicesEl.querySelectorAll(".dialogue-choice").forEach((button) => {
+    button.addEventListener("click", () => {
+      const choice = state.dialogue.choices[Number(button.dataset.choice)];
+
+      if (!choice) {
+        return;
+      }
+
+      choice.onSelect();
+    });
+  });
 }
 
 function showDialogueLine(speaker, text) {
@@ -1185,6 +1213,116 @@ function startPetriTalkAfterDuck() {
   playDialogueSequence([
     { speaker: "Petri", text: "See? When you follow my advice, things tend to work out.", pauseMs: 3000 },
   ]);
+}
+
+function startSaunaGuruDialogue() {
+  clearPendingInteraction();
+  clearDialogueTimers();
+
+  state.message = "";
+  state.hoverTarget = null;
+  state.hoverExitText = "";
+  state.dialogue.active = true;
+  state.dialogue.speaker = "Sauna Guru";
+  state.dialogue.text = "Ah… I sensed your bugs before you even entered the steam.";
+  state.dialogue.choices = [];
+
+  syncDialogueLock();
+  renderDialoguePanel();
+  renderActionLine();
+
+  dialogueTimers.push(window.setTimeout(() => {
+    if (!state.dialogue.active) {
+      return;
+    }
+
+    state.dialogue.text = "Tell me… what have you broken?";
+    state.dialogue.choices = [
+      {
+        label: "I wouldn’t call it broken… more like unexpectedly permanent.",
+        onSelect: () => handleSaunaGuruChoice(1),
+      },
+      {
+        label: "Everything. I broke everything.",
+        onSelect: () => handleSaunaGuruChoice(2),
+      },
+      {
+        label: "Nothing. It stopped working completely on its own.",
+        onSelect: () => handleSaunaGuruChoice(3),
+      },
+    ];
+
+    renderDialoguePanel();
+    renderActionLine();
+  }, 5000));
+}
+
+function handleSaunaGuruChoice(choiceId) {
+  if (!state.dialogue.active) {
+    return;
+  }
+
+  clearDialogueTimers();
+  state.dialogue.choices = [];
+  renderDialoguePanel();
+
+  if (choiceId === 1) {
+    state.dialogue.text = "Ahh… you cling to illusion. Many have tried to rename their bugs… none have escaped them.";
+    renderDialoguePanel();
+    renderActionLine();
+
+    dialogueTimers.push(window.setTimeout(() => {
+      state.dialogue.text = "A thing given a better name is still broken. Until you accept this… your code will resist you.";
+      renderDialoguePanel();
+      renderActionLine();
+
+      dialogueTimers.push(window.setTimeout(() => {
+        closeDialogue();
+      }, 5000));
+    }, 5000));
+    return;
+  }
+
+  if (choiceId === 2) {
+    state.dialogue.text = "Good… very good.";
+    renderDialoguePanel();
+    renderActionLine();
+
+    dialogueTimers.push(window.setTimeout(() => {
+      state.flags.debuggingBranchUnlocked = true;
+      addInventoryItem("Debugging Branch");
+      state.dialogue.text = "Take this. The Debugging Branch. When the code burns… you will know where to look.";
+      renderDialoguePanel();
+      renderInventory();
+      renderScene();
+      renderActionLine();
+
+      dialogueTimers.push(window.setTimeout(() => {
+        closeDialogue();
+      }, 5000));
+    }, 5000));
+    return;
+  }
+
+  state.dialogue.text = "Ah… the ancient art of blaming the void.";
+  renderDialoguePanel();
+  renderActionLine();
+
+  dialogueTimers.push(window.setTimeout(() => {
+    state.dialogue.text = "Systems do not fail alone. There is always… a Johan somewhere.";
+    renderDialoguePanel();
+    renderActionLine();
+
+    dialogueTimers.push(window.setTimeout(() => {
+      state.dialogue.text = "Return when you are ready to take responsibility.";
+      renderDialoguePanel();
+      renderActionLine();
+
+      dialogueTimers.push(window.setTimeout(() => {
+        closeDialogue();
+      }, 5000));
+    }, 5000));
+  }, 5000));
 }
 
 function addInventoryItem(itemName) {
