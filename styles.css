@@ -252,6 +252,51 @@ body.is-intro-exiting .intro-overlay {
   white-space: pre;
 }
 
+.dialogue-panel {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  bottom: 4px;
+  z-index: 6;
+  padding: 4px 5px 5px;
+  border: 1px solid #7a4a7a;
+  background: rgba(16, 0, 16, 0.93);
+  font-family: "Silkscreen", "Tiny5", "Courier New", Courier, monospace;
+  color: #ffd0ff;
+}
+
+.dialogue-choices {
+  display: grid;
+  gap: 2px;
+}
+
+.dialogue-choice {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--verb-text);
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 7px;
+  line-height: 1.15;
+}
+
+.dialogue-choice:hover,
+.dialogue-choice:focus-visible {
+  color: var(--verb-active);
+  outline: none;
+}
+
+.game-window.is-dialogue-locked .scene,
+.game-window.is-dialogue-locked .command-panel {
+  pointer-events: none;
+}
+
+.game-window.is-dialogue-locked .dialogue-panel {
+  pointer-events: auto;
+}
+
 
 .hotspot,
 .player {
