@@ -16,6 +16,8 @@ const devHelpOverlayEl = document.getElementById("dev-help-overlay");
 const dialoguePanelEl = document.getElementById("dialogue-panel");
 const dialogueSpeakerEl = document.getElementById("dialogue-speaker");
 const dialogueTextEl = document.getElementById("dialogue-text");
+const dialogueChoicesEl = document.getElementById("dialogue-choices");
+const gameWindowEl = document.getElementById("game-window");
 const verbButtons = Array.from(document.querySelectorAll(".verb"));
 const hotspotButtons = Array.from(document.querySelectorAll(".hotspot"));
 const rootStyle = document.documentElement.style;
@@ -30,6 +32,7 @@ let introVisualsVisible = false;
 let introPreludeTimer = null;
 let introTimers = [];
 let introExitTimer = null;
+let dialogueTimers = [];
 
 if (introOverlayEl) {
   document.body.classList.add("is-intro-active");
@@ -113,6 +116,7 @@ const state = {
     duckCollected: false,
     mentorHintUnlocked: false,
     centaurFixed: false,
+    debuggingBranchUnlocked: false,
   },
 };
 
@@ -379,6 +383,7 @@ const scenes = {
         label: "Johan",
         rect: { left: 140, bottom: 3, width: 45, height: 80 },
         walkTo: { left: 120, bottom: 15 },
+        visibleWhen: "debuggingBranchUnlocked",
       }
     },
     exits: {
@@ -690,7 +695,7 @@ const targets = {
         setMessage("He stares into the steam like it contains production logs.");
       },
       talk() {
-        setMessage("The Sauna Guru murmurs: Silence is just debugging without a keyboard.");
+        startSaunaGuruDialogue();
       },
       pickup() {
         setMessage("You are not strong enough to lift his aura.");
@@ -700,6 +705,29 @@ const targets = {
       },
       debug() {
         setMessage("He says: First, reproduce the problem. Then breathe.");
+      },
+    },
+  },
+  jukkaBros: {
+    name: "JukkaBros",
+    verbs: {
+      walk() {
+        setMessage("You walk toward JukkaBros.");
+      },
+      look() {
+        setMessage("JukkaBros is waiting for the right moment to appear.");
+      },
+      talk() {
+        setMessage("Not yet.");
+      },
+      pickup() {
+        setMessage("That would be a bad idea.");
+      },
+      use() {
+        setMessage("That does not help.");
+      },
+      debug() {
+        setMessage("No bugs found. Only anticipation.");
       },
     },
   },
@@ -796,6 +824,10 @@ const targets = {
 
 verbButtons.forEach((button) => {
   button.addEventListener("click", () => {
+    if (isDialogueActive()) {
+      return;
+    }
+
     selectVerb(button.dataset.verb);
   });
 });
@@ -805,27 +837,48 @@ hotspotButtons.forEach((button) => {
   const target = targets[key];
 
   button.addEventListener("mouseenter", () => {
+    if (isDialogueActive()) {
+      return;
+    }
+
     state.hoverTarget = target.name;
     renderActionLine();
   });
 
   button.addEventListener("mouseleave", () => {
+    if (isDialogueActive()) {
+      return;
+    }
+
     state.hoverTarget = null;
     renderActionLine();
   });
 
   button.addEventListener("focus", () => {
+    if (isDialogueActive()) {
+      return;
+    }
+
     state.hoverTarget = target.name;
     renderActionLine();
   });
 
   button.addEventListener("blur", () => {
+    if (isDialogueActive()) {
+      return;
+    }
+
     state.hoverTarget = null;
     renderActionLine();
   });
 
   button.addEventListener("click", (event) => {
     event.stopPropagation();
+
+    if (isDialogueActive()) {
+      return;
+    }
+
     interactWithTarget(key);
   });
 });
@@ -1142,6 +1195,26 @@ function addInventoryItem(itemName) {
   state.inventory.push(itemName);
 }
 
+function syncDialogueLock() {
+  if (!gameWindowEl) {
+    return;
+  }
+
+  gameWindowEl.classList.toggle("is-dialogue-locked", state.dialogue.active);
+
+  verbButtons.forEach((button) => {
+    button.disabled = state.dialogue.active;
+  });
+
+  hotspotButtons.forEach((button) => {
+    button.disabled = state.dialogue.active;
+  });
+
+  inventoryListEl.querySelectorAll(".inventory-item").forEach((button) => {
+    button.disabled = state.dialogue.active;
+  });
+}
+
 function hasInventoryItem(itemName) {
   return state.inventory.includes(itemName);
 }
@@ -1161,22 +1234,40 @@ function renderInventory() {
     .join("");
 
   inventoryListEl.querySelectorAll(".inventory-item").forEach((button) => {
+    button.disabled = state.dialogue.active;
+
     button.addEventListener("mouseenter", () => {
+      if (isDialogueActive()) {
+        return;
+      }
+
       state.hoverTarget = button.dataset.item;
       renderActionLine();
     });
 
     button.addEventListener("mouseleave", () => {
+      if (isDialogueActive()) {
+        return;
+      }
+
       state.hoverTarget = null;
       renderActionLine();
     });
 
     button.addEventListener("focus", () => {
+      if (isDialogueActive()) {
+        return;
+      }
+
       state.hoverTarget = button.dataset.item;
       renderActionLine();
     });
 
     button.addEventListener("blur", () => {
+      if (isDialogueActive()) {
+        return;
+      }
+
       state.hoverTarget = null;
       renderActionLine();
     });
@@ -1214,7 +1305,8 @@ function renderScene() {
       return;
     }
 
-    const isHidden = hotspot.hiddenWhen ? Boolean(state.flags[hotspot.hiddenWhen]) : false;
+    const isHidden = (hotspot.hiddenWhen ? Boolean(state.flags[hotspot.hiddenWhen]) : false)
+      || (hotspot.visibleWhen ? !Boolean(state.flags[hotspot.visibleWhen]) : false);
     button.hidden = isHidden;
 
     if (isHidden) {
@@ -1322,6 +1414,7 @@ function isPointInsideRect(scenePoint, rect) {
 
 function switchScene(sceneId, playerPosition, message = "") {
   clearPendingInteraction();
+  closeDialogue(false);
   state.currentSceneId = sceneId;
   state.playerPosition = { ...playerPosition };
   state.hoverTarget = null;
