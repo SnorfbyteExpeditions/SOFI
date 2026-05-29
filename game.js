@@ -13,12 +13,16 @@ const inventoryListEl = document.getElementById("inventory-list");
 const introOverlayEl = document.getElementById("intro-overlay");
 const introTextEl = document.getElementById("intro-text");
 const devHelpOverlayEl = document.getElementById("dev-help-overlay");
+const dialoguePanelEl = document.getElementById("dialogue-panel");
+const dialogueSpeakerEl = document.getElementById("dialogue-speaker");
+const dialogueTextEl = document.getElementById("dialogue-text");
 const verbButtons = Array.from(document.querySelectorAll(".verb"));
 const hotspotButtons = Array.from(document.querySelectorAll(".hotspot"));
 const rootStyle = document.documentElement.style;
 const SCENE_NATIVE_WIDTH = 320;
 const SCENE_NATIVE_HEIGHT = 144;
 let pendingInteractionTimer = null;
+let dialogueTimers = [];
 let introCompleted = false;
 let introActivated = false;
 let introSequenceStarted = false;
@@ -100,6 +104,11 @@ const state = {
   devHelpPoint: null,
   message: "",
   inventory: [],
+  dialogue: {
+    active: false,
+    speaker: "",
+    text: "",
+  },
   flags: {
     duckCollected: false,
     mentorHintUnlocked: false,
@@ -558,11 +567,11 @@ const targets = {
       talk() {
         if (state.flags.duckCollected) {
           state.flags.mentorHintUnlocked = true;
-          setMessage("Petri says: Debug the centaur with the duck.");
+          startPetriTalkAfterDuck();
           return;
         }
 
-        setMessage("Petri says: Find a rubber duck first.");
+        startPetriIntroDialogue();
       },
       pickup() {
         setMessage("Better not pick up your mentor.");
@@ -822,6 +831,10 @@ hotspotButtons.forEach((button) => {
 });
 
 sceneEl.addEventListener("click", (event) => {
+  if (isDialogueActive()) {
+    return;
+  }
+
   if (event.target.closest(".hotspot")) {
     return;
   }
@@ -857,6 +870,11 @@ sceneEl.addEventListener("click", (event) => {
 });
 
 sceneEl.addEventListener("mousemove", (event) => {
+  if (isDialogueActive()) {
+    sceneEl.style.cursor = "default";
+    return;
+  }
+
   state.devHelpPoint = getScenePoint(event);
   renderDevHelpOverlay();
 
@@ -894,6 +912,10 @@ if (!introAudioEl) {
 window.addEventListener("resize", updateGameScale);
 
 function selectVerb(verb) {
+  if (isDialogueActive()) {
+    return;
+  }
+
   clearPendingInteraction();
   state.selectedVerb = verb;
   state.message = "";
@@ -921,6 +943,10 @@ function handleDeveloperKeydown(event) {
 }
 
 function interactWithTarget(key) {
+  if (isDialogueActive()) {
+    return;
+  }
+
   const hotspot = getCurrentScene().hotspots[key];
 
   if (!hotspot) {
@@ -931,6 +957,11 @@ function interactWithTarget(key) {
 }
 
 function renderActionLine() {
+  if (state.dialogue.active) {
+    actionLineEl.textContent = "";
+    return;
+  }
+
   if (state.hoverExitText) {
     actionLineEl.textContent = state.hoverExitText;
     return;
@@ -981,6 +1012,128 @@ function setMessage(text) {
   state.message = text;
 }
 
+function isDialogueActive() {
+  return state.dialogue.active;
+}
+
+function clearDialogueTimers() {
+  while (dialogueTimers.length > 0) {
+    window.clearTimeout(dialogueTimers.pop());
+  }
+}
+
+function closeDialogue() {
+  clearDialogueTimers();
+  state.dialogue.active = false;
+  state.dialogue.speaker = "";
+  state.dialogue.text = "";
+  state.hoverTarget = null;
+  state.hoverExitText = "";
+  syncDialogueLock();
+  renderDialoguePanel();
+  renderActionLine();
+}
+
+function syncDialogueLock() {
+  verbButtons.forEach((button) => {
+    button.disabled = state.dialogue.active;
+  });
+
+  hotspotButtons.forEach((button) => {
+    button.disabled = state.dialogue.active;
+  });
+
+  inventoryListEl.querySelectorAll(".inventory-item").forEach((button) => {
+    button.disabled = state.dialogue.active;
+  });
+
+  document.getElementById("game-window")?.classList.toggle("is-dialogue-locked", state.dialogue.active);
+}
+
+function renderDialoguePanel() {
+  if (!dialoguePanelEl || !dialogueSpeakerEl || !dialogueTextEl) {
+    return;
+  }
+
+  if (!state.dialogue.active) {
+    dialoguePanelEl.hidden = true;
+    dialogueSpeakerEl.textContent = "";
+    dialogueTextEl.textContent = "";
+    return;
+  }
+
+  dialoguePanelEl.hidden = false;
+  dialogueSpeakerEl.textContent = state.dialogue.speaker;
+  dialogueTextEl.textContent = state.dialogue.text;
+}
+
+function showDialogueLine(speaker, text) {
+  state.dialogue.active = true;
+  state.dialogue.speaker = speaker;
+  state.dialogue.text = text;
+  syncDialogueLock();
+  renderDialoguePanel();
+  renderActionLine();
+}
+
+function playDialogueSequence(steps) {
+  clearPendingInteraction();
+  clearDialogueTimers();
+  state.message = "";
+  state.hoverTarget = null;
+  state.hoverExitText = "";
+
+  if (steps.length === 0) {
+    return;
+  }
+
+  let index = 0;
+
+  const advance = () => {
+    if (index >= steps.length) {
+      closeDialogue();
+      return;
+    }
+
+    const step = steps[index++];
+    showDialogueLine(step.speaker, step.text);
+
+    if (index >= steps.length) {
+      dialogueTimers.push(window.setTimeout(() => {
+        closeDialogue();
+      }, step.pauseMs ?? 3000));
+      return;
+    }
+
+    dialogueTimers.push(window.setTimeout(advance, step.pauseMs ?? 3000));
+  };
+
+  advance();
+}
+
+function startPetriIntroDialogue() {
+  const PETRI_FINAL_RESPONSE_PAUSE_MS = 3000;
+
+  playDialogueSequence([
+    { speaker: "Johan", text: "Hi!", pauseMs: 3000 },
+    { speaker: "Johan", text: "My name's Johan Devsson, and I want to be a software developer", pauseMs: 3000 },
+    { speaker: "Petri", text: "Yikes", pauseMs: 3000 },
+    { speaker: "Petri", text: "Dont sneak up on me like that!", pauseMs: 3000 },
+    { speaker: "Petri", text: "Well...then.. Devberg--", pauseMs: 3000 },
+    { speaker: "Johan", text: "DEVSSON.", pauseMs: 3000 },
+    { speaker: "Johan", text: "Johan DEVSSON.", pauseMs: 3000 },
+    { speaker: "Petri", text: "So, you want to be a software developer, eh?", pauseMs: 3000 },
+    { speaker: "Petri", text: "You look more like a junior PowerPoint specialist", pauseMs: 3000 },
+    { speaker: "Petri", text: "But if you are serious about developing you need a rubber duck first", pauseMs: PETRI_FINAL_RESPONSE_PAUSE_MS },
+  ]);
+}
+
+function startPetriTalkAfterDuck() {
+  playDialogueSequence([
+    { speaker: "Petri", text: "See? When you follow my advice, things tend to work out.", pauseMs: 3000 },
+  ]);
+}
+
 function addInventoryItem(itemName) {
   if (state.inventory.includes(itemName)) {
     return;
@@ -996,6 +1149,7 @@ function hasInventoryItem(itemName) {
 function renderInventory() {
   if (state.inventory.length === 0) {
     inventoryListEl.innerHTML = '<li class="inventory-empty">Empty</li>';
+    syncDialogueLock();
     return;
   }
 
@@ -1028,6 +1182,10 @@ function renderInventory() {
     });
 
     button.addEventListener("click", () => {
+      if (isDialogueActive()) {
+        return;
+      }
+
       clearPendingInteraction();
       state.selectedInventory = state.selectedInventory === button.dataset.item ? null : button.dataset.item;
       state.message = "";
@@ -1035,6 +1193,8 @@ function renderInventory() {
       renderActionLine();
     });
   });
+
+  syncDialogueLock();
 }
 
 function renderScene() {
