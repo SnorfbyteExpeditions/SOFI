@@ -334,6 +334,13 @@ body.is-intro-exiting .intro-overlay {
   height: 40px;
 }
 
+.hotspot-jukkabros {
+  left: 100px;
+  bottom: 10px;
+  width: 12px;
+  height: 40px;
+}
+
 .sprite-npc {
   position: absolute;
   left: 0;
